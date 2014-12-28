@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/client.css?8efeabfc" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/sim-types.css?9fe17b09" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/battle.css?00c12b9a" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/utilichart.css?79b3083d" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/font-awesome.css?6e6af851" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/jquery.slider.min.css?4c2bab9e" />
+		<script src="//play.pokemonshowdown.com/js/lib/jquery-2.1.0.min.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery-cookie.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/autoresize.jquery.min.js?98350bc9"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery.json-2.3.min.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/soundmanager2-nodebug-jsmin.js?aa988d75"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/html-sanitizer-minified.js?949c4200"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/lodash.compat.js?80903af9"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/backbone.js?1adb34b9"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/d3.v3.min.js"></script>
+		<script src="//play.pokemonshowdown.com/js/config.js?ba41f947"></script>
+		<script src="//play.pokemonshowdown.com/js/battledata.js?40b8c16c"></script>
+		<script src="//play.pokemonshowdown.com/data/pokedex-mini.js?ab97ef4f"></script>
+		<script src="//play.pokemonshowdown.com/data/typechart.js?686e805a"></script>
+		<script src="//play.pokemonshowdown.com/js/battle.js?11a8c757"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/sockjs-0.3.4.min.js"></script>
+		<script src="//play.pokemonshowdown.com/data/learnsets-g6.js?97beade2"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery.slider.min.js?f3ff3b0d"></script>
+		<script src="//play.pokemonshowdown.com/data/pokedex.js?95ca4c8d"></script>
+		<script src="//play.pokemonshowdown.com/data/formats-data.js?0e01ac48"></script>
+		<script src="//play.pokemonshowdown.com/data/moves.js?706c47b4"></script>
+		<script src="//play.pokemonshowdown.com/data/items.js?55531b0d"></script>
+		<script src="//play.pokemonshowdown.com/data/abilities.js?399a9644"></script>
+		<script src="./Room.js"></script>
+		<script src="./client-chat.js"></script>
+		<script src="//play.pokemonshowdown.com/js/storage.js?8a5f91bf"></script>
+		<script src="//play.pokemonshowdown.com/data/graphics.js?71b09bb9"></script>
+		<script src="//play.pokemonshowdown.com/js/utilichart.js?19b62b68"></script>
+		<script src="//play.pokemonshowdown.com/data/aliases.js?e56a2ba7" async="async"></script>
+		
+		<script src="./client-battle.js"></script>
+		<script src="./vars.js"></script>
+		<script src="./funks.js"></script>
+		<style>
+			body, html {
+				padding: 0;
+				margin: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				color: black !important;
+				font-family: initial !important;
+				font-size: initial !important;
+				background: none;
+			}
+			#map {
+				position: relative;
+				width: 640px;
+				height: 480px;
+				overflow: hidden;
+				float: left;
+			}
+			#container {
+				background: black;
+				position: relative;
+				width: 100%;
+				height: 100%;
+			}
+			#players {
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 1;
+			}
+			.player {
+				position: absolute;
+				z-index: 3;
+				margin-top: -3px;
+			}
+			.nametag {
+				position: absolute;
+				top: -16px;
+				left: 0;
+				font-size: 11px;
+				width: 50px;
+				overflow: hidden;
+				margin-left: -21px;
+				font-weight: bold;
+				text-shadow: 0px 0px white;
+				background: rgba(255, 255, 255, 0.6);
+				text-align: center;
+				border-radius: 10px;
+				cursor: pointer;
+			}
+			.msgs {
+				display: none;
+				bottom: 36px;
+				top: auto;
+				width: 100px;
+				margin-left: -41px;
+				font-weight: normal;
+				background: rgba(255, 255, 255, 0.8);
+			}
+			#invisitype {
+				padding: 0;
+				padding-top: 5px;
+				padding-bottom: 5px;
+				margin: 0;
+				border: none;
+				color: grey;
+				outline: none;
+				float: left;
+				font-size: 20px;
+			}
+			.expbar {
+				height: 7px;
+				margin-top: -7px;
+				position: absolute;
+				width: 50%;
+				background: rgb(0, 75, 158);
+			}
+			#bag {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				background: url('./itemscontainer.png');
+				width: 547px;
+				height: 368px;
+				z-index: 4;
+				margin-left: -273.5px;
+				margin-top: -184px;
+				display: none;
+			}
+			#bagItems {
+				position: absolute;
+				right: 20px;
+				top: 20px;
+				width: 278px;
+				padding: 5px;
+				height: 222px;
+				overflow-y: scroll;
+				overflow-x: hidden;
+			}
+			#itemDesc {
+				position: absolute;
+				left: 80px;
+				top: 276px;
+				width: 454px;
+				height: 87px;
+				overflow: auto;
+				overflow-x: hidden;
+				font-size: 20px;
+				font-family: cursive;
+				margin-top: 5px;
+				color: white;
+				text-shadow: 0.1em 0.1em black;
+			}
+			#itemIcon {
+				position: absolute;
+				left: 14px;
+				top: 295px;
+				width: 50px;
+				height: 50px;
+				overflow-x: hidden;
+				text-align: center;
+			}
+			.itemInBag {
+				font-size: 20px;
+				font-family: monospace;
+				font-weight: bold;
+				color: rgb(75, 75, 75);
+				text-shadow: 0.05em 0.05em rgb(226, 226, 226);
+				border-bottom: 5px dashed rgb(231, 228, 130);
+				text-transform: uppercase;
+				cursor: pointer;
+			}
+			.itemInBag:hover {
+				color: black;
+			}
+			.itemNameLabel {
+				width: 204px;
+				display: inline-block;
+			}
+			.itemCountLabel {
+				width: 55px;
+				display: inline-block;
+				text-align: right;
+			}
+			.ps-room-opaque {
+				width: 900px;
+				height: 500px;
+				background: rgba(255, 255, 255, 0.5) !important;
+				position: absolute;
+				bottom: 0;
+				top: auto;
+				right: 0;
+				left: auto;
+				outline: 1px solid rgb(179, 179, 179);
+			}
+			.battle-log {
+				background: transparent;
+			}
+		</style>
+		<script>
+			$(function() {
+				vars.init();
+			})
+		</script>
+	</head>
+	<body>
+		<div id="loginform" style="position: absolute;top: 0;left: 0;margin: 80px;margin-left: 30px;border: 1px solid #b6b6b6;padding: 5px;background: white;z-index: 1;">
+			USERNAME: <input type="text" id="username" onkeypress="if (event.keyCode == 13) $('#password').focus();"><br>
+			PASSWORD: <input type="password" id="password" onkeypress="if (event.keyCode == 13) $('#loginbutton').click();"><br>
+			<button id="loginbutton" onclick="vars.login($('#username').val(), $('#password').val());">LOGIN (use showdown credentials)</button>
+			<script>$(function() {$("#username").focus();})</script>
+		</div>
+		<div id="map">
+			<div id="container">
+				<div id="players"></div>
+			</div>
+		</div>
+		<input type="text" id="invisitype" />
+</html>
