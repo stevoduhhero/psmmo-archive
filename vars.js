@@ -33,6 +33,11 @@ vars.character = {
 };
 vars.popups = new Array();
 vars.rooms = new Object();
+vars.rates = {
+	encounterRate: [1.25, 3.33, 6.75, 8.5, 10],
+};
+vars.items = new Object();
+vars.team = new Array();
 (function() {
 	for (var step = 0; step < 24; step++) {
 		var walkOrRunStep = "walk";

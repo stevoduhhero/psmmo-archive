@@ -64,6 +64,11 @@
 				width: 100%;
 				height: 100%;
 			}
+			#rightPanel {
+				position: absolute;
+				right: 0;
+				top: 0;
+			}
 			#players {
 				position: absolute;
 				top: 0;
@@ -109,6 +114,7 @@
 				outline: none;
 				float: left;
 				font-size: 20px;
+				width: 100%;
 			}
 			.expbar {
 				height: 7px;
@@ -186,7 +192,7 @@
 			}
 			.ps-room-opaque {
 				width: 900px;
-				height: 500px;
+				height: 515px;
 				background: rgba(255, 255, 255, 0.5) !important;
 				position: absolute;
 				bottom: 0;
@@ -217,5 +223,15 @@
 				<div id="players"></div>
 			</div>
 		</div>
-		<input type="text" id="invisitype" />
+		<div id="rightPanel">
+			<input type="text" id="invisitype" />
+			<ul>
+				<li>No close battle window</li>
+				<li>No exp, level up, evolve, learn moves</li>
+				<li>No bag</li>
+				<li>No catch pokemon (/mmo catchPokemon.pokemonid)</li>
+				<li>No save game</li>
+				<li>No challenges</li>
+			</ul>
+		</div>
 </html>

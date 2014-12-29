@@ -13,11 +13,93 @@ vars.init = function() {
 	
 	vars.socket = sock;
 	
+	if (!localStorage.getItem("team")) vars.chooseStarterPrompt();
+
 	$(document).keydown(function(e) {
 		vars.key(e.keyCode);
 	}).keyup(function(e) {
 		vars.key(e.keyCode, true);
 	});
+};
+vars.chooseStarterPrompt = function() {
+	var insides = '',
+		starters = ["bulbasaur", "charmander", "squirtle", "chikorita", "cyndaquil", "totodile", "treecko", "torchic", "mudkip", "turtwig", "chimchar", "piplup", "snivy", "tepig", "oshawott", "chespin", "fennekin", "froakie"];
+	insides += '<div id="chooseStarter" style="background: rgba(255, 255, 255, 0.7);z-index: 99;overflow-y: auto;position: absolute;top: 0;left: 0;width: 100%;height: 100%;">';
+	insides += '<b>Select a starter pokemon:</b><br />';
+	var open = false;
+	for (var i in starters) {
+		var mon = BattlePokedex[starters[i]];
+		if (!open) {
+			insides += '<div style="width: 150px;height: 50px;margin: auto;">';
+			open = true;
+		}
+		insides += '<div style="float: left;width: 50px;height: 50px;overflow: hidden;">';
+		insides += '<img style="cursor: pointer;margin-top: -20px;margin-left: -20px;"';
+		insides += ' onclick="vars.chooseStarter(\'' + starters[i] + '\');vars.items.pokeball = 5;"';
+		insides += ' src="http://play.pokemonshowdown.com/sprites/bw/' + mon.species.toLowerCase() + '.png"';
+		insides += ' />';
+		insides += '</div>';
+		if ((i + 1) / 3 == Math.floor((i + 1) / 3)) {
+			insides += '</div>';
+			open = false;
+		}
+	}
+	insides += '</div>';
+	$('body').append(insides);
+};
+vars.chooseStarter = function(monId) {
+	$("#chooseStarter").remove();
+	var pokemonKeys = Object.keys(BattlePokedex);
+	var randomMon = Math.floor(Math.random() * pokemonKeys.length);
+	var pokemon = BattlePokedex[pokemonKeys[randomMon]];
+	if (monId) pokemon = BattlePokedex[monId];
+	var starterLevel = 5,
+		ability = Math.floor(Math.random() * Object.keys(pokemon.abilities).length),
+		moves = new Array(),
+		hasMove = new Object(),
+		hasAttackingMove = false,
+		learnset = BattleLearnsets[toId(pokemon.species)].learnset;
+	for (var i in learnset) {
+		var move = BattleMovedex[i];
+		var whenLearned = learnset[i];
+		var canLearnNow = false;
+		if (whenLearned.length) {
+			for (var x in whenLearned) {
+				var learnByLevel = whenLearned[x].split('L');
+				if (learnByLevel.length - 1 > 0) {
+					var levelLearned = Math.abs(learnByLevel[1]);
+					if (!isNaN(levelLearned) && (levelLearned <= starterLevel)) {
+						//if levelLearned is a number && if we meet the level requirements to learn said move
+						canLearnNow = true;
+					}
+					if (whenLearned[x].slice(-1) == "a") {
+						//learns as soon as its born (start move)
+						canLearnNow = true;
+					}
+				}
+			}
+		}
+		if (!hasMove[move] && canLearnNow) {
+			if (moves.length == 3 && move.category == "Status" && !hasAttackingMove) {} else {
+				moves.push(move.name);
+				hasMove[move.name] = true;
+				if (move.category != "Status") hasAttackingMove = true;
+			}
+		}
+	}
+	var shinyRate = 1 / 1000;
+	var natureKeys = Object.keys(BattleNatures);
+	var team = [{
+		species: pokemon.species,
+		nature: natureKeys[Math.floor(Math.random() * natureKeys.length)],
+		ability: pokemon.abilities[Object.keys(pokemon.abilities)[ability]],
+		level: starterLevel,
+		moves: moves,
+		shiny: ((chance(shinyRate * 100)) ? true : false),
+		exp: 0,
+		nextLevelExp: 50,
+	}];
+	vars.team = team;
 };
 vars.resize = function() {
 	var canvas = $("#map"),
@@ -27,7 +109,7 @@ vars.resize = function() {
 	canvas.css("zoom", 100 + percentZoom + "%");
 	
 	var leftOvers = (body.width() - (canvas.width() * ((100 + percentZoom) / 100)));
-	$("#invisitype").width(leftOvers);
+	$("#rightPanel").width(leftOvers);
 };
 vars.key = function(key, keyup) {
 	if (!vars.username) return;
@@ -44,17 +126,17 @@ vars.key = function(key, keyup) {
 		}
 		return false;
 	}
-	if (keyup) {
-		if (user.direction == dir) {
-			user.walking = false;
-			vars.send('/mmo stop.' + user.x + '.' + user.y);
-		}
-	} else if (!user.walking) {
+	if (keyup && user.direction == dir) vars.stopWalking(); else if (!user.walking) {
 		user.walking = true;
 		user.direction = dir;
 		vars.initWalkLoop();
 		vars.send('/mmo start.' + dir);
 	}
+};
+vars.stopWalking = function() {
+	var user = vars.players[toId(vars.username)];
+	user.walking = false;
+	vars.send('/mmo stop.' + user.x + '.' + user.y);
 };
 vars.initWalkLoop = function() {
 	if (vars.walking) return;
@@ -86,15 +168,20 @@ vars.walkLoop = function() {
 			var block = vars.map[user.y];
 			if (block) block = block[user.x];
 			if (block === undefined) block = 0; //block doesnt exist, blackness
-			if (block == 1) {
+			if ((block == 1) || vars.encounteredMon) {
 				user.x = revert.x;
 				user.y = revert.y;
 			}
-			if (user.userid == userid) vars.focusCamera(); else {
-				sprite.animate({
-					left: (vars.block.width * user.x) + 'px',
-					top: (vars.block.height * user.y) + 'px'
-				}, vars.fps);
+			var moved = false;
+			if (!(revert.x == user.x && revert.y == user.y)) moved = true;
+			if (moved) {
+				if (!vars.encounteredMon && block == 3 && userid == user.userid) vars.encounterMon();
+				if (user.userid == userid) vars.focusCamera(); else {
+					sprite.animate({
+						left: (vars.block.width * user.x) + 'px',
+						top: (vars.block.height * user.y) + 'px'
+					}, vars.fps);
+				}			
 			}
 		}
 	}
@@ -191,6 +278,9 @@ vars.loadMap = function(name) {
 			startingPosition = data[3].split(':')[1].split(','),
 			doors = JSON.parse(data[4].split(':')[1]);
 		vars.mapName = name;
+		vars.minMonLevel = minMonLevel;
+		vars.encounterMons = mons;
+		vars.doors = doors;
 		data.splice(0, 5);
 		
 		vars.startingPosition = {
@@ -222,10 +312,30 @@ vars.loadMap = function(name) {
 vars.addMessage = function(userid, message) {
 	var el = $('#p' + userid + ' .msgs');
 	var t = new Date() / 1;
-	el.prepend('<div id="' + userid + t + '">' + /*Tools.escapeHTML*/(message) + '</div>').show();
+	el.prepend('<div id="' + userid + t + '">' + Tools.escapeHTML(message) + '</div>').show();
 	setTimeout('jQuery("#' + userid + t + '").fadeOut(function() {jQuery("#' + userid + t + '").remove();});', 5000);
 };
-
+vars.encounterMon = function() {
+	var user = vars.players[toId(vars.username)];
+	for (var i in vars.encounterMons) {
+		var mon = vars.encounterMons[i];
+		var monId = mon.slice(0, -1),
+			rank = mon.substr(-1);
+		var probability = vars.rates.encounterRate[rank] / 187.5;
+		probability = probability * 100;
+		if (chance(probability)) {
+			vars.encounteredMon = monId;
+			vars.stopWalking();
+			//set our own team
+			vars.send('/utm ' + Tools.packTeam(vars.team));
+			//send the server the pokemon we've encountered
+			vars.send('/mmo encounter.' + monId + "." + vars.minMonLevel + "." + user.x + "." + user.y);
+			//on server create pokemon based on the monId
+			//on server do Rooms.global.startBattle(VS BOOTY BOT and set her team as monId pokemon we created)
+			break;
+		}
+	}
+};
 
 /* showdownish stuff */
 vars.send = function (data, room) {
@@ -585,3 +695,191 @@ function cookie(c_name) {
 function eatcookie(name) {
 	document.cookie = name + '=; expires=Thu, 01-Jan-70 00:00:01 GMT;';
 }
+function chance(percent) {
+	var random = Math.floor(Math.random() * 100) + 1;
+	if (random > percent) return false;
+	return true;
+	}
+Tools.fastUnpackTeam = function (buf) {
+	if (!buf) return null;
+
+	var team = [];
+	var i = 0, j = 0;
+
+	while (true) {
+		var set = {};
+		team.push(set);
+
+		// name
+		j = buf.indexOf('|', i);
+		set.nickname = buf.substring(i, j);
+		i = j+1;
+
+		// species
+		j = buf.indexOf('|', i);
+		set.species = buf.substring(i, j) || set.nickname;
+		i = j+1;
+
+		// item
+		j = buf.indexOf('|', i);
+		set.item = buf.substring(i, j);
+		i = j+1;
+
+		// ability
+		j = buf.indexOf('|', i);
+		var ability = buf.substring(i, j);
+		var template = Tools.getTemplate(set.species);
+		set.ability = (template.abilities && ability in {'':1, 0:1, 1:1, H:1} ? template.abilities[ability||'0'] : ability);
+		i = j+1;
+
+		// moves
+		j = buf.indexOf('|', i);
+		set.moves = buf.substring(i, j).split(',');
+		i = j+1;
+
+		// nature
+		j = buf.indexOf('|', i);
+		set.nature = buf.substring(i, j);
+		i = j+1;
+
+		// evs
+		j = buf.indexOf('|', i);
+		if (j !== i) {
+			var evs = buf.substring(i, j).split(',');
+			set.evs = {
+				hp: Number(evs[0])||0,
+				atk: Number(evs[1])||0,
+				def: Number(evs[2])||0,
+				spa: Number(evs[3])||0,
+				spd: Number(evs[4])||0,
+				spe: Number(evs[5])||0
+			};
+		}
+		i = j+1;
+
+		// gender
+		j = buf.indexOf('|', i);
+		if (i !== j) set.gender = buf.substring(i, j);
+		i = j+1;
+
+		// ivs
+		j = buf.indexOf('|', i);
+		if (j !== i) {
+			var ivs = buf.substring(i, j).split(',');
+			set.ivs = {
+				hp: ivs[0]==='' ? 31 : Number(ivs[0]),
+				atk: ivs[1]==='' ? 31 : Number(ivs[1]),
+				def: ivs[2]==='' ? 31 : Number(ivs[2]),
+				spa: ivs[3]==='' ? 31 : Number(ivs[3]),
+				spd: ivs[4]==='' ? 31 : Number(ivs[4]),
+				spe: ivs[5]==='' ? 31 : Number(ivs[5])
+			};
+		}
+		i = j+1;
+
+		// shiny
+		j = buf.indexOf('|', i);
+		if (i !== j) set.shiny = true;
+		i = j+1;
+
+		// level
+		j = buf.indexOf('|', i);
+		if (i !== j) set.level = parseInt(buf.substring(i, j), 10);
+		i = j+1;
+
+		// happiness
+		j = buf.indexOf(']', i);
+		if (j < 0) {
+			if (buf.substring(i)) {
+				set.happiness = Number(buf.substring(i));
+			}
+			break;
+		}
+		if (i !== j) set.happiness = Number(buf.substring(i, j));
+		i = j+1;
+	}
+
+	return team;
+};
+Tools.packTeam = function (team) {
+	//team = Tools.teams[teamkey].pokemon
+	var buf = '';
+	if (!team) return '';
+	for (var i=0; i<team.length; i++) {
+		var set = team[i];
+		if (buf) buf += ']';
+		// name
+		buf += (set.nickname || set.species);
+		// species
+		var id = toId(set.species || set.nickname);
+		buf += '|' + (toId(set.nickname || set.species) === id ? '' : id);
+		// item
+		buf += '|' + toId(set.item);
+		// ability
+		var template = Tools.getTemplate(set.species || set.nickname);
+		var abilities = template.abilities;
+		id = toId(set.ability);
+		if (abilities) {
+			if (id == toId(abilities['0'])) {
+				buf += '|';
+			} else if (id === toId(abilities['1'])) {
+				buf += '|1';
+			} else if (id === toId(abilities['H'])) {
+				buf += '|H';
+			} else {
+				buf += '|' + id;
+			}
+		} else {
+			buf += '|' + id;
+		}
+		// moves
+		buf += '|' + set.moves.map(toId).join(',');
+		// nature
+		buf += '|' + set.nature;
+		// evs
+		var evs = '|';
+		if (set.evs) {
+			evs = '|' + (set.evs['hp']||'') + ',' + (set.evs['atk']||'') + ',' + (set.evs['def']||'') + ',' + (set.evs['spa']||'') + ',' + (set.evs['spd']||'') + ',' + (set.evs['spe']||'');
+		}
+		if (evs === '|,,,,,') {
+			buf += '|';
+		} else {
+			buf += evs;
+		}
+		// gender
+		if (set.gender && set.gender !== template.gender) {
+			buf += '|'+set.gender;
+		} else {
+			buf += '|'
+		}
+		// ivs
+		var ivs = '|';
+		if (set.ivs) {
+			ivs = '|' + (set.ivs['hp']===31||set.ivs['hp']===undefined ? '' : set.ivs['hp']) + ',' + (set.ivs['atk']===31||set.ivs['atk']===undefined ? '' : set.ivs['atk']) + ',' + (set.ivs['def']===31||set.ivs['def']===undefined ? '' : set.ivs['def']) + ',' + (set.ivs['spa']===31||set.ivs['spa']===undefined ? '' : set.ivs['spa']) + ',' + (set.ivs['spd']===31||set.ivs['spd']===undefined ? '' : set.ivs['spd']) + ',' + (set.ivs['spe']===31||set.ivs['spe']===undefined ? '' : set.ivs['spe']);
+		}
+		if (ivs === '|,,,,,') {
+			buf += '|';
+		} else {
+			buf += ivs;
+		}
+		// shiny
+		if (set.shiny) {
+			buf += '|S';
+		} else {
+			buf += '|'
+		}
+		// level
+		if (set.level && set.level != 100) {
+			buf += '|'+set.level;
+		} else {
+			buf += '|'
+		}
+		// happiness
+		if (set.happiness !== undefined && set.happiness !== 255) {
+			buf += '|'+set.happiness;
+		} else {
+			buf += '|';
+		}
+	}
+	return buf;
+};
