@@ -131,6 +131,7 @@ vars.key = function(key, keyup) {
 		}
 		return false;
 	}
+	if (vars.encounteredMon) return;
 	if (keyup && user.direction == dir) vars.stopWalking(); else if (!user.walking) {
 		user.walking = true;
 		user.direction = dir;
@@ -394,6 +395,9 @@ vars.user = {
 		return '';
 	}
 };
+vars.topbar = {
+	updateTabbar: function() {}
+};
 vars.dismissPopups = function() {
 	var source = false;
 	while (this.popups.length) {
@@ -462,6 +466,7 @@ vars.receive = function(data) {
 			//	//self.joinRoom(roomid);
 			//});
 		} else {
+			delete vars.encounteredMon;
 			if (isdeinit) { // deinit
 				this.removeChat(roomid);
 			} else { // noinit
