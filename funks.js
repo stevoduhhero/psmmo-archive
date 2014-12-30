@@ -332,16 +332,131 @@ vars.encounterMon = function() {
 		if (chance(probability)) {
 			vars.encounteredMon = monId;
 			vars.stopWalking();
-			//set our own team
 			vars.send('/utm ' + Tools.packTeam(vars.team));
-			//send the server the pokemon we've encountered
 			vars.send('/mmo encounter.' + monId + "." + vars.minMonLevel + "." + user.x + "." + user.y);
-			//on server create pokemon based on the monId
-			//on server do Rooms.global.startBattle(VS BOOTY BOT and set her team as monId pokemon we created)
 			break;
 		}
 	}
 };
+vars.updateExp = function(el, slot, funk, t) {
+	if (!vars.team[slot] || vars.team[slot].exp === undefined) return false;
+	var width = vars.team[slot].exp / vars.team[slot].nextLevelExp * vars.totalExpWidth;
+	$(el)[funk]({"width": width + "px"}, t);
+};
+vars.checkEvolve = function(monKey) {
+	var mon = vars.team[monKey];
+	var pokemon = BattlePokedex[toId(mon.species)];
+	if (pokemon.evos && pokemon.evos.length) {
+		for (var i in pokemon.evos) {
+			var evolution = BattlePokedex[pokemon.evos[i]];
+			if (mon.level >= evolution.evoLevel) {
+				//cue evolving animation (growing shrinking shit thing)
+				var evolveOrNaw = confirm("Your " + mon.species + " would like to evolve into a " + evolution.species + ".");
+				if (evolveOrNaw) {
+					if (vars.team[monKey].species == vars.team[monKey].nickname) vars.team[monKey].nickname = evolution.species;
+					vars.team[monKey].species = evolution.species;
+				}
+			}
+		}
+	}
+};
+vars.learnMove = function(move, monKey, replaceMove) {
+	var mon = vars.team[monKey];
+	if (!replaceMove) {
+		mon.moves.push(move);
+	} else {
+		var replacementKey = 0;
+		for (var i in mon.moves) if (i == replaceMove) replacementKey = i;
+		mon.moves[replacementKey] = move;
+	}
+};
+vars.checkLearnMove = function(monKey) {
+	var mon = vars.team[monKey];
+	var learnset = BattleLearnsets[toId(mon.species)].learnset,
+		moves = new Object();
+	for (var i in mon.moves) moves[mon.moves[i]] = true;
+	for (var i in learnset) {
+		var move = BattleMovedex[i];
+		var whenLearned = learnset[i],
+			haveMove = moves[toId(move.name)];
+		if (whenLearned.length && !haveMove) {
+			for (var x in whenLearned) {
+				var learnByLevel = whenLearned[x].split('L');
+				if (learnByLevel.length - 1 > 0) {
+					var levelLearned = Math.abs(learnByLevel[1]);
+					if (!isNaN(levelLearned) && (levelLearned == mon.level)) {
+						//if levelLearned is a number && if we meet the level requirements to learn said move
+						var amountMovesHave = mon.moves.length;
+						if (amountMovesHave == 4) {
+							//different kind of prompt that asks what kind of move to replace
+							function prompty(errMsg) {
+								var msg = (errMsg || "") + "Your " + mon.species + " wants to learn a new move! (" + move.name + ") but you already have 4 moves. Would you like to replace a move?\n\n";
+								for (var i in mon.moves) msg += "(" + (Math.abs(i) + 1) + ") " + mon.moves[i] + "\n";
+								msg += "\nEnter the move you want to cancel or hit cancel.";
+								var learnOrNaw = prompt(msg);
+								if (typeof learnOrNaw == "string") {
+									var moveId = Math.abs(learnOrNaw) - 1;
+									if (isNaN(moveId) || moveId < 0 || moveId > 3) {
+										prompty("ERROR: '" + learnOrNaw + "' IS NOT AN OPTION.\n");
+									} else {
+										vars.learnMove(move.name, monKey, moveId);
+									}
+								}
+							}
+							prompty();
+						} else {
+							vars.learnMove(move.name, monKey, false);
+							alert("Your " + mon.species + " learned " + move.name + "!");
+						}
+					}
+				}
+			}
+		}
+	}
+};
+vars.gainExp = function(el, slot) {
+	var numMons = Object.keys(vars.expDivision).length,
+		expGain = 100;
+	expGain = expGain / numMons;
+	for (var monKey in vars.expDivision) {
+		var mon = vars.team[monKey];
+		mon.exp += expGain;
+		if (!mon.exp) return false; //bug, glitch, idfk
+		if (mon.exp >= mon.nextLevelExp) {
+			var oldSpecies = mon.species;
+			mon.exp = mon.exp - mon.nextLevelExp;
+			mon.nextLevelExp += 50;
+			mon.level++;
+			$(el).css("width", "0%");
+			if (mon.level > 100) {
+				mon.level = 100;
+				mon.exp = 0;
+				mon.nextLevelExp = 0;
+			}
+			alert("Your pokemon just leveled up to level " + mon.level + ".");
+			vars.checkLearnMove(monKey);
+			vars.checkEvolve(monKey);
+			if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
+		}
+	}
+	vars.expDivison = new Object();
+	vars.encounteredMon = false;
+};
+vars.differentMonInfo = function(who, slot, el) {
+	console.log(who + "::" + slot + "::" + $(el).length);
+	if (who == "you") {
+		vars.expDivision[slot] = true;
+		vars.updateExp(el, slot, "css");
+	} else {
+		vars.expDivision = new Object();
+		vars.expDivision[slot] = true;
+	}
+};
+
+
+
+
+
 
 /* showdownish stuff */
 vars.send = function (data, room) {

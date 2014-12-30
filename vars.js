@@ -38,6 +38,7 @@ vars.rates = {
 };
 vars.items = new Object();
 vars.team = new Array();
+vars.expDivision = new Object();
 vars.focusedInput = false;
 (function() {
 	for (var step = 0; step < 24; step++) {

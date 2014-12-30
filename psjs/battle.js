@@ -1904,6 +1904,14 @@ var Side = (function () {
 			pokemon.statbarElem = null;
 		});
 		if (this.battle.faintCallback) this.battle.faintCallback(this.battle, this);
+		
+		//mmo gain exp
+		var expEl = this.battle.$expEl,
+			who = ((this === this.battle.mySide) ? "you" : "opp");
+		if (who == "opp") {
+			vars.gainExp(expEl, slot);
+			vars.updateExp(expEl, slot, "animate", 500);
+		}
 	};
 	Side.prototype.updateHPText = function (pokemon) {
 		var $hptext = pokemon.statbarElem.find('.hptext');
@@ -3116,7 +3124,18 @@ var Battle = (function () {
 			kwargs = row[1];
 			animDelay = nextAnimDelay;
 			if (!kwargs.simult) nextAnimDelay++;
-
+			
+			//mmo
+			switch (args[0]) {
+				case '-start':
+				case '-end':
+					var poke = this.getPokemon(args[1]);
+					var who = ((poke.side === this.battle.mySide) ? "you" : "opp");
+					vars.differentMonInfo(who, poke.slot, this.battle.$expEl);
+					break;
+			}
+			
+			//normal
 			switch (args[0]) {
 			case '-damage':
 				var poke = this.getPokemon(args[1]);
@@ -5354,6 +5373,9 @@ var Battle = (function () {
 			poke.details = args[2];
 			poke.searchid = args[1].substr(0, 2) + args[1].substr(3) + '|' + args[2];
 			poke.side.updateSidebar();
+			
+			//mmo
+			vars.differentMonInfo(((poke.side === this.battle.mySide) ? "you" : "opp"), poke.slot, this.battle.$expEl);
 			break;
 		case 'teampreview':
 			this.teamPreview(true);
@@ -5379,6 +5401,9 @@ var Battle = (function () {
 			} else {
 				poke.side.dragIn(poke);
 			}
+			
+			//mmo
+			vars.differentMonInfo(((poke.side === this.mySide) ? "you" : "opp"), slot, this.$expEl);
 			break;
 		case 'faint':
 			if (this.waitForResult()) return;

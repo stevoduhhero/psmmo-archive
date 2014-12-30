@@ -99,11 +99,14 @@ body, html {
 	background: transparent;
 }
 .expbar {
-	height: 7px;
-	margin-top: -7px;
+	height: 4px;
+	margin-top: 160px;
+	margin-left: 136px;
 	position: absolute;
-	width: 50%;
-	background: rgb(0, 75, 158);
+	z-index: 1;
+	width: 150px;
+	background: rgba(0, 75, 158, 0.75);
+	border-radius: 5px 5px 0px 0px;
 }
 #bag {
 	position: absolute;

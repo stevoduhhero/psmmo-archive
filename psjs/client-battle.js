@@ -8,7 +8,7 @@
 		initialize: function(data) {
 			this.me = {};
 
-			this.$el.addClass('ps-room-opaque').html('<div class="exitButton" onclick="vars.send(\'/leave ' + this.id + '\');">x</div><div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log"></div><div class="battle-log-add">Connecting...</div><div class="battle-controls"></div>');
+			this.$el.addClass('ps-room-opaque').html('<div id="exp' + this.id + '" class="expbar"></div><div class="exitButton" onclick="vars.send(\'/leave ' + this.id + '\');">x</div><div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log"></div><div class="battle-log-add">Connecting...</div><div class="battle-controls"></div>');
 
 			this.$battle = this.$el.find('.battle');
 			this.$controls = this.$el.find('.battle-controls');
@@ -26,6 +26,10 @@
 			this.battle.endCallback = _.bind(this.updateControls, this);
 			this.battle.startCallback = _.bind(this.updateControls, this);
 			this.battle.stagnateCallback = _.bind(this.updateControls, this);
+			
+			//mmo add exp info
+			this.battle.$expEl = $('#exp' + this.id);
+			vars.totalExpWidth = this.battle.$expEl.width();
 
 			this.battle.play();
 		},
