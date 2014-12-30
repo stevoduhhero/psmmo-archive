@@ -2562,6 +2562,8 @@ var Battle = (function () {
 		if (winner) this.message('' + Tools.escapeHTML(winner) + ' won the battle!');
 		else this.message('Tie between ' + Tools.escapeHTML(this.p1.name) + ' and ' + Tools.escapeHTML(this.p2.name) + '!');
 		this.done = 1;
+		
+		if (this.yourSide.name == vars.wildPokemonBot) vars.send('/leave ' + this.id);
 	};
 	Battle.prototype.prematureEnd = function () {
 		this.message('This replay ends here.');

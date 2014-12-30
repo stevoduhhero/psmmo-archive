@@ -28,6 +28,7 @@
 			this.battle.stagnateCallback = _.bind(this.updateControls, this);
 			
 			//mmo add exp info
+			this.battle.id = this.id;
 			this.battle.$expEl = $('#exp' + this.id);
 			vars.totalExpWidth = this.battle.$expEl.width();
 

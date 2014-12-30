@@ -1,4 +1,5 @@
 var vars = new Object();
+vars.wildPokemonBot = "Pixie-Bot";
 vars.x = 0;
 vars.y = 0;
 vars.players = new Object();
