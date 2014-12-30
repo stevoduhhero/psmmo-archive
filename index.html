@@ -69,6 +69,26 @@
 				right: 0;
 				top: 0;
 			}
+			.exitButton {
+				position: absolute;
+				color: red;
+				margin-left: -8px;
+				margin-top: -6px;
+				background: white;
+				padding: 3px;
+				cursor: pointer;
+				border-radius: 20px;
+				width: 15px;
+				height: 15px;
+				text-align: center;
+				line-height: 0.75;
+				z-index: 1;
+				font-weight: bold;
+				text-shadow: 1px 1px 0px black;
+			}
+			.exitButton:hover {
+				box-shadow: 1px 1px 1px 1px rgb(80, 80, 80);
+			}
 			#players {
 				position: absolute;
 				top: 0;
@@ -226,7 +246,6 @@
 		<div id="rightPanel">
 			<input type="text" id="invisitype" />
 			<ul>
-				<li>No close battle window</li>
 				<li>No exp, level up, evolve, learn moves</li>
 				<li>No bag</li>
 				<li>No catch pokemon (/mmo catchPokemon.pokemonid)</li>

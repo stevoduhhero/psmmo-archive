@@ -8,7 +8,7 @@
 		initialize: function(data) {
 			this.me = {};
 
-			this.$el.addClass('ps-room-opaque').html('<div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log"></div><div class="battle-log-add">Connecting...</div><div class="battle-controls"></div>');
+			this.$el.addClass('ps-room-opaque').html('<div class="exitButton" onclick="vars.send(\'/leave ' + this.id + '\');">x</div><div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log"></div><div class="battle-log-add">Connecting...</div><div class="battle-controls"></div>');
 
 			this.$battle = this.$el.find('.battle');
 			this.$controls = this.$el.find('.battle-controls');

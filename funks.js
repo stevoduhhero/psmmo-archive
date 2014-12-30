@@ -19,13 +19,17 @@ vars.init = function() {
 		vars.key(e.keyCode);
 	}).keyup(function(e) {
 		vars.key(e.keyCode, true);
+	}).on("focus", "input, textarea", function() {
+		vars.focusedInput = this;
+	}).on("blur", "input, textarea", function() {
+		vars.focusedInput = false;
 	});
 };
 vars.chooseStarterPrompt = function() {
 	var insides = '',
 		starters = ["bulbasaur", "charmander", "squirtle", "chikorita", "cyndaquil", "totodile", "treecko", "torchic", "mudkip", "turtwig", "chimchar", "piplup", "snivy", "tepig", "oshawott", "chespin", "fennekin", "froakie"];
 	insides += '<div id="chooseStarter" style="background: rgba(255, 255, 255, 0.7);z-index: 99;overflow-y: auto;position: absolute;top: 0;left: 0;width: 100%;height: 100%;">';
-	insides += '<b>Select a starter pokemon:</b><br />';
+	insides += '<center><h2>Select a starter pokemon:</h2></center>';
 	var open = false;
 	for (var i in starters) {
 		var mon = BattlePokedex[starters[i]];
@@ -119,8 +123,9 @@ vars.key = function(key, keyup) {
 	if (!keys[key]) {
 		//not an arrow key
 		var el = $("#invisitype");
+		if ($(vars.focusedInput).length) el = $(vars.focusedInput);
 		el.focus();
-		if (key == 13 && el.val()) {
+		if (el.attr('id') == "invisitype" && key == 13 && el.val()) {
 			vars.send('/mmo  msg.' + el.val());
 			el.val("");
 		}
@@ -385,6 +390,7 @@ vars.user = {
 	get: function(n) {
 		if (n == 'name' || n == 'username') return vars.username;
 		if (n == 'userid') return toId(vars.username);
+		if (n == 'named') return ((vars.username) ? true : false);
 		return '';
 	}
 };
@@ -647,6 +653,15 @@ vars.receive = function(data) {
 			}
 			break;
 	}
+};
+vars.removeChat = function(id) {
+	var room = this.rooms[id];
+	if (room) {
+		delete this.rooms[id];
+		room.destroy();
+		return true;
+	}
+	return false;
 };
 function toRoomid(roomid) {
 		return roomid.replace(/[^a-zA-Z0-9-]+/g, '');
