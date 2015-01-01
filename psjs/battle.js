@@ -1909,8 +1909,9 @@ var Side = (function () {
 		var expEl = this.battle.$expEl,
 			who = ((this === this.battle.mySide) ? "you" : "opp");
 		if (who == "opp") {
-			vars.gainExp(expEl, slot);
-			vars.updateExp(expEl, slot, "animate", 500);
+			var actualTeamSlot = vars.slotFromPackage(this.battle.mySide.active[0]);
+			vars.gainExp(expEl, actualTeamSlot);
+			vars.updateExp(expEl, actualTeamSlot, "animate", 500);
 		}
 	};
 	Side.prototype.updateHPText = function (pokemon) {
@@ -3132,8 +3133,8 @@ var Battle = (function () {
 				case '-start':
 				case '-end':
 					var poke = this.getPokemon(args[1]);
-					var who = ((poke.side === this.battle.mySide) ? "you" : "opp");
-					vars.differentMonInfo(who, poke.slot, this.battle.$expEl);
+					var who = ((poke.side === this.mySide) ? "you" : "opp");
+					vars.differentMonInfo(who, vars.slotFromPackage(this.mySide.active[0]), this.$expEl);
 					break;
 			}
 			
@@ -5377,7 +5378,7 @@ var Battle = (function () {
 			poke.side.updateSidebar();
 			
 			//mmo
-			vars.differentMonInfo(((poke.side === this.battle.mySide) ? "you" : "opp"), poke.slot, this.battle.$expEl);
+			vars.differentMonInfo(((poke.side === this.mySide) ? "you" : "opp"), vars.slotFromPackage(this.mySide.active[0]), this.$expEl);
 			break;
 		case 'teampreview':
 			this.teamPreview(true);
@@ -5405,7 +5406,7 @@ var Battle = (function () {
 			}
 			
 			//mmo
-			vars.differentMonInfo(((poke.side === this.mySide) ? "you" : "opp"), slot, this.$expEl);
+			vars.differentMonInfo(((poke.side === this.mySide) ? "you" : "opp"), vars.slotFromPackage(this.mySide.active[0]), this.$expEl);
 			break;
 		case 'faint':
 			if (this.waitForResult()) return;

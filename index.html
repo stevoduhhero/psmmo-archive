@@ -29,7 +29,6 @@
 		<script src="//play.pokemonshowdown.com/data/pokedex.js?95ca4c8d"></script>
 		<script src="//play.pokemonshowdown.com/data/formats-data.js?0e01ac48"></script>
 		<script src="//play.pokemonshowdown.com/data/moves.js?706c47b4"></script>
-		<script src="//play.pokemonshowdown.com/data/items.js?55531b0d"></script>
 		<script src="//play.pokemonshowdown.com/data/abilities.js?399a9644"></script>
 		<script src="./psjs/Room.js"></script>
 		<script src="./psjs/client-chat.js"></script>
@@ -38,6 +37,7 @@
 		<script src="//play.pokemonshowdown.com/js/utilichart.js?19b62b68"></script>
 		<script src="//play.pokemonshowdown.com/data/aliases.js?e56a2ba7" async="async"></script>
 		<script src="./psjs/client-battle.js"></script>
+		<script src="//play.pokemonshowdown.com/data/items.js?55531b0d"></script>
 		<script src="./vars.js"></script>
 		<script src="./funks.js"></script>
 		<script>
@@ -59,12 +59,18 @@
 			</div>
 		</div>
 		<div id="rightPanel">
+			<button onclick="vars.saveGame();">Save Game</button><button onclick="vars.openBag();">Open Bag</button>
 			<input type="text" id="invisitype" />
 			<ul>
-				<li>No bag</li>
-				<li>No catch pokemon (/mmo catchPokemon.pokemonid)</li>
-				<li>No save game</li>
 				<li>No challenges</li>
 			</ul>
+		</div>
+		<div id="bag">
+			<div class="relative">
+				<a class="closeX" onclick="$('#bag').hide();" style="right: -25px;top: -8px;">&#10006;</a>
+				<div id="bagItems"></div>
+				<div id="itemDesc"></div>
+				<div id="itemIcon"></div>
+			</div>
 		</div>
 </html>

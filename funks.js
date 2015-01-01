@@ -1,4 +1,5 @@
 vars.init = function() {
+	vars.openSaveData();
 	vars.loadMap(vars.mapName);
 	vars.resize();
 	
@@ -13,7 +14,7 @@ vars.init = function() {
 	
 	vars.socket = sock;
 	
-	if (!localStorage.getItem("team")) vars.chooseStarterPrompt();
+	if (!vars.team) vars.chooseStarterPrompt();
 
 	$(document).keydown(function(e) {
 		vars.key(e.keyCode);
@@ -132,12 +133,21 @@ vars.key = function(key, keyup) {
 		return false;
 	}
 	if (vars.encounteredMon) return;
-	if (keyup && user.direction == dir) vars.stopWalking(); else if (!user.walking) {
+	var condition = (dir != user.direction && !vars.heldKeys[key]);
+	if (keyup && user.direction == dir) {
+		vars.stopWalking();
+	} else if (!keyup && (!user.walking || condition)) {
+		if (condition) {
+			//stop, update the other people to let them know where u are
+			//THEN show that your walking in a new direction
+			vars.stopWalking();
+		}
 		user.walking = true;
 		user.direction = dir;
 		vars.initWalkLoop();
 		vars.send('/mmo start.' + dir);
 	}
+	if (keyup) delete vars.heldKeys[key]; else vars.heldKeys[key] = true;
 };
 vars.stopWalking = function() {
 	var user = vars.players[toId(vars.username)];
@@ -452,6 +462,131 @@ vars.differentMonInfo = function(who, slot, el) {
 		vars.expDivision[slot] = true;
 	}
 };
+vars.saveGame = function() {
+	if (vars.team.length) localStorage.setItem("team", JSON.stringify(vars.team));
+	var itemsString = "";
+	for (var itemId in vars.items) itemsString += itemId + "*" + vars.items[itemId] + "|";
+	itemsString = itemsString.slice(0, -1);
+	localStorage.setItem("items", itemsString);
+	$("body").append('<div id="saving" style="position: absolute;z-index: 1000;text-align: center;background: white;opacity: 0.5;top: 0;left: 0;width: 100%;height: 100%;font-size: 25px;font-weight: bold;">Saving...</div>');
+	setTimeout("jQuery('#saving').remove();", 1500);
+};
+vars.openSaveData = function() {
+	vars.team = JSON.parse(localStorage.getItem("team"));
+	if (localStorage.getItem("items")) {
+		var items = localStorage.getItem("items").split("|");
+		for (var i in items) {
+			var splint = items[i].split('*');
+			var itemId = splint[0],
+				itemSupply = Math.abs(splint[1]);
+			vars.items[itemId] = itemSupply;
+		}
+	}
+};
+vars.openBag = function() {
+	$("#bag").show();
+	var insides = '',
+		counter = 0;
+	for (var itemId in vars.items) {
+		var item = BattleItems[itemId];
+		if (counter == 0) vars.changeBagInfo(itemId);
+		insides += '<div class="itemInBag" onclick="vars.useItem(\'' + itemId + '\');" onmouseover="vars.changeBagInfo(\'' + itemId + '\');"><span class="itemNameLabel">' + item.name + '</span><span class="itemCountLabel">x' + vars.items[itemId] + '</span></div>';
+		counter++;
+	}
+	$("#bagItems").html(insides);
+};
+vars.changeBagInfo = function(itemId) {
+	var item = BattleItems[itemId];
+	$("#itemDesc").html(item.desc);
+	$("#itemIcon").html("<span style=\"display: inline-block;" + Tools.getItemIcon(itemId) + ";width: 24px;height: 24px;margin-top: 12.5px;\"></span>");
+};
+vars.useItem = function(itemId) {
+	var item = BattleItems[itemId];
+	var use = confirm("Use a " + item.name + "?");
+	if (!use) return;
+	var items = {
+		pokeball: function(ball) {
+			var monId = vars.encounteredMon;
+			if (!monId) return "You can't use your pokeball because you aren't playing against any wild pokemon.";
+			var pokemon = BattlePokedex[monId];
+			//cue the throw pokeball animation
+			if (!ball) ball = "pokeball";
+			var balls = {
+				pokeball: 1,
+				greatball: 1.5,
+				ultraball: 2,
+				masterball: true,
+				//there are more that are a bit harder to implement lol
+			};
+			var statusModifiers = {
+				"frz": 2, //freeze
+				"slp": 2, //sleep
+				"par": 1.5, //paralyzed
+				"brn": 1.5, //burned
+				"psn": 1.5, //poisoned
+				"tox": 1.5, //poisoned
+				"none": 1
+			}; //idk if i spelled these right cuz PS spells these weirdish
+			var catchRates = {
+				"caterpie": 255,//.....
+			};
+			var ballModifier = balls[ball],
+				statusModifier = 1, //no status bcos we're not checking statusModifiers[currentStatus]
+				catchRate = 255, //do catchRates[pokemonId]
+				currentHP = 404, //check
+				maxHP = 404; //check
+			
+			//calculate
+			var catchValue = (((3 * maxHP) - (2 * currentHP) * catchRate * ballModifier) / (3 * maxHP)) * statusModifier;
+			var captured = 1048560 / Math.sqrt(Math.sqrt(16711680 / Math.abs(catchValue)));
+			var shakes = 0,
+				shakesStayInside = 0;
+			function shake() {
+				//maybe do pokeball wobble animations here
+				var ran = Math.floor(Math.random() * 65535);
+				if (ran < captured) shakesStayInside++;
+				shakes++;
+				if (shakes < 4) shake();
+			}
+			shake();
+
+			if (shakesStayInside == 4) {
+				//catch
+				vars.send('/mmo catchPokemon.' + monId);
+			} else {
+				//break out of ball
+				alert(pokemon.species + " broke free!");
+			}
+		},
+	};
+	if (!items[itemId]) alert("That items functionality hasn't been implemented yet... sorry"); else {
+		var error = items[itemId]();
+		if (error) return alert(error);
+		vars.items[itemId] -= 1;
+		if (vars.items[itemId] <= 0) delete vars.items[itemId];
+		$("#bag").hide();
+	}
+};
+vars.slotFromPackage = function(poke) {
+	poke.item = "";
+	poke.nature = "";
+	poke.gender = "";
+	poke.species = poke.baseSpecies;
+	var packaged = Tools.packTeam([poke]);
+	var teamClone = jQuery.extend(true, {}, vars.team);
+	for (var slot in teamClone) {
+		var mon = teamClone[slot];
+		mon.species = BattlePokedex[toId(mon.species)].baseSpecies;
+		mon.nature = "";
+		mon.item = "";
+		mon.gender = "";
+		var packagedMon = Tools.packTeam([mon]);
+		if (packagedMon === packaged) return slot;
+	}
+	return 0;
+};
+
+
 
 
 
@@ -651,6 +786,25 @@ vars.receive = function(data) {
 			var message = parts.join('|');
 			vars.addMessage(name, message);
 			break;
+		case 'cp':
+		case 'catchPokemon':
+			parts.splice(0, 1);
+			var packagedMon = parts.join('|');
+			var unpackedMon = Tools.fastUnpackTeam(packagedMon)[0];
+			function nicknamePrompt(err) {
+				var nickname = prompt((err || "") + "Enter a nickname for your new " + unpackedMon.species);
+				if (typeof nickname != "string") return;
+				if (nickname.length < 19 && nickname.length != 0) return nickname; else {
+					nicknamePrompt("ERROR: The nickname must be 1-18 characters.\n\n");
+				}
+			}
+			var nickname = nicknamePrompt();
+			if (nickname) unpackedMon.nickname = nickname;
+			unpackedMon.exp = 0;
+			unpackedMon.nextLevelExp = (Math.abs(unpackedMon.level - 5) * 50);
+			vars.team.push(unpackedMon);
+			$(".closeX, .exitButton").click();
+			break;
 		case 'updateuser':
 			if (parts[1].substr(0, 6) != "Guest ") vars.send('/start ' + vars.mapName);
 			break;
@@ -705,10 +859,10 @@ vars.receive = function(data) {
 			$(".challenges").empty();
 			for (var from in froms) {
 				var icons = 'You haven\'t set a team yet. (Hint: go to teambuilder)';
-				if (client.team && Tools.teams[client.team]) {
-					icons = Tools.teams[client.team].name;
-					for (var i in Tools.teams[client.team].pokemon) {
-						var info = exports.BattlePokedex[toId(Tools.teams[client.team].pokemon[i].species)];
+				if (vars.team && Tools.teams[vars.team]) {
+					icons = Tools.teams[vars.team].name;
+					for (var i in Tools.teams[vars.team].pokemon) {
+						var info = exports.BattlePokedex[toId(Tools.teams[vars.team].pokemon[i].species)];
 						icons += '<span class="col iconcol" style="width: 32px;height: 24px;' + Tools.getIcon(info) + '"></span>';
 					}
 				}
@@ -944,14 +1098,14 @@ Tools.packTeam = function (team) {
 		var set = team[i];
 		if (buf) buf += ']';
 		// name
-		buf += (set.nickname || set.species);
+		buf += (set.nickname || set.name || set.species);
 		// species
-		var id = toId(set.species || set.nickname);
-		buf += '|' + (toId(set.nickname || set.species) === id ? '' : id);
+		var id = toId(set.species || set.nickname || set.name);
+		buf += '|' + (toId(set.nickname || set.name || set.species) === id ? '' : id);
 		// item
 		buf += '|' + toId(set.item);
 		// ability
-		var template = Tools.getTemplate(set.species || set.nickname);
+		var template = Tools.getTemplate(set.species || set.nickname || set.name);
 		var abilities = template.abilities;
 		id = toId(set.ability);
 		if (abilities) {

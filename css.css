@@ -44,7 +44,7 @@ body, html {
 	font-weight: bold;
 	text-shadow: 1px 1px 0px black;
 }
-.exitButton:hover {
+.exitButton:hover, a.closeX:hover {
 	box-shadow: 1px 1px 1px 1px rgb(80, 80, 80);
 }
 #players {
@@ -57,6 +57,24 @@ body, html {
 	position: absolute;
 	z-index: 3;
 	margin-top: -3px;
+}
+a.closeX {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 20px;
+	background-color: #FFF;
+	color: red;
+	margin-top: 3px;
+	margin-right: 20px;
+	border-radius: 20px;
+	padding-left: 3px;
+	padding-top: 1px;
+	cursor: pointer;
+	z-index: 1;
+	font-size: 16px;
+	font-weight: bold;
+	box-shadow: 1px 1px 1px 0px rgb(80, 80, 80);
 }
 .nametag {
 	position: absolute;
@@ -185,6 +203,7 @@ body, html {
 	right: 0;
 	left: auto;
 	outline: 1px solid rgb(179, 179, 179);
+	z-index: 1;
 }
 .battle-log {
 	background: transparent;

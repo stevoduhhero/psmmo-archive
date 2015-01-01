@@ -34,8 +34,9 @@ vars.character = {
 };
 vars.popups = new Array();
 vars.rooms = new Object();
+vars.heldKeys = new Object();
 vars.rates = {
-	encounterRate: [1.25, 3.33, 6.75, 8.5, 10],
+	encounterRate: [1.85, 3.33, 6.75, 8.5, 10],
 };
 vars.items = new Object();
 vars.team = new Array();
