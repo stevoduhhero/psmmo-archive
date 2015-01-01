@@ -42,6 +42,8 @@
 		<script src="./funks.js"></script>
 		<script>
 			$(function() {
+				if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
+				$('#aud').css('opacity', opacity);
 				vars.init();
 			})
 		</script>
@@ -59,6 +61,7 @@
 			</div>
 		</div>
 		<div id="rightPanel">
+			&nbsp;<img id="aud" src="./stolenaudio.png" height="18" style="cursor: pointer;" onclick="var mode = (!Tools.prefs('mute'));Tools.prefs('mute', mode, true);if (mode) {$(this).css('opacity', '0.5');} else {$(this).css('opacity', 1);}" />&nbsp;
 			<button onclick="vars.saveGame();">Save Game</button><button onclick="vars.openBag();">Open Bag</button>
 			<input type="text" id="invisitype" />
 			<ul>
