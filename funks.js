@@ -386,7 +386,7 @@ vars.checkEvolve = function(monKey) {
 };
 vars.learnMove = function(move, monKey, replaceMove) {
 	var mon = vars.team[monKey];
-	if (!replaceMove) {
+	if (replaceMove === undefined) {
 		mon.moves.push(move);
 	} else {
 		var replacementKey = 0;
@@ -416,7 +416,7 @@ vars.checkLearnMove = function(monKey) {
 							function prompty(errMsg) {
 								var msg = (errMsg || "") + "Your " + mon.species + " wants to learn a new move! (" + move.name + ") but you already have 4 moves. Would you like to replace a move?\n\n";
 								for (var i in mon.moves) msg += "(" + (Math.abs(i) + 1) + ") " + mon.moves[i] + "\n";
-								msg += "\nEnter the move you want to cancel or hit cancel.";
+								msg += "\nEnter the move you want to replace or hit cancel.";
 								var learnOrNaw = prompt(msg);
 								if (typeof learnOrNaw == "string") {
 									var moveId = Math.abs(learnOrNaw) - 1;
@@ -429,7 +429,7 @@ vars.checkLearnMove = function(monKey) {
 							}
 							prompty();
 						} else {
-							vars.learnMove(move.name, monKey, false);
+							vars.learnMove(move.name, monKey);
 							alert("Your " + mon.species + " learned " + move.name + "!");
 						}
 					}
