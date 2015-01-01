@@ -63,9 +63,13 @@
 		<div id="rightPanel">
 			&nbsp;<img id="aud" src="./stolenaudio.png" height="18" style="cursor: pointer;" onclick="var mode = (!Tools.prefs('mute'));Tools.prefs('mute', mode, true);if (mode) {$(this).css('opacity', '0.5');} else {$(this).css('opacity', 1);}" />&nbsp;
 			<button onclick="vars.saveGame();">Save Game</button><button onclick="vars.openBag();">Open Bag</button>
+			<div id="teamOrder"></div>
 			<input type="text" id="invisitype" />
 			<ul>
-				<li>No challenges</li>
+				<h2>To Do List</h2>
+				<li>challenges</li>
+				<li>way to get more pokeballs</li>
+				<li>multiple maps (doors dont work)</li>
 			</ul>
 		</div>
 		<div id="bag">

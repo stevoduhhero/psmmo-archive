@@ -27,6 +27,22 @@ body, html {
 	right: 0;
 	top: 0;
 }
+#teamOrder {
+	width: 100%;
+	height: 24px;
+	margin: 5px;
+}
+#teamOrder div {
+	width: 32px;
+	height: 24px;
+	float: left;
+	outline: 1px solid #b6b6b6;
+	margin-right: 5px;
+	cursor: pointer;
+}
+#teamOrder .selected {
+	background-color: rgba(255, 0, 0, 0.25) !important;
+}
 .exitButton {
 	position: absolute;
 	color: red;
