@@ -306,7 +306,6 @@ vars.focusCamera = function() {
 };
 vars.loadMap = function(name) {
 	$.get("./maps/" + name, function(data) {
-		if (vars.username && vars.username.substr(0, 6) != "Guest ") vars.send('/start ' + name);
 		var data = data.split('\n');
 		var name = data[0].split(':')[1],
 			minMonLevel = Math.floor(data[1].split(':')[1]),
@@ -320,6 +319,8 @@ vars.loadMap = function(name) {
 		vars.encounterMons = mons;
 		vars.doors = doors;
 		data.splice(0, 5);
+		
+		if (vars.username && vars.username.substr(0, 6) != "Guest ") vars.send('/start ' + name);
 		
 		vars.startingPosition = {
 			x: Math.floor(startingPosition[1]),

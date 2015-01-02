@@ -15,7 +15,7 @@ body, html {
 	float: left;
 }
 .mapimg {
-	background-repeat: no-repeat;
+	background-repeat: no-repeat !important;
 }
 #container {
 	background: black;
