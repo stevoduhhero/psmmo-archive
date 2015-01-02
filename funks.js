@@ -121,6 +121,7 @@ vars.chooseStarter = function(monId) {
 	vars.updateTeamOrder();
 };
 vars.resize = function() {
+	$("#map").width(vars.block.x * vars.block.width).height(vars.block.y * vars.block.height);
 	var canvas = $("#map"),
 			body = $("body");
 	var spaceAvailable = body.height() - canvas.height();
@@ -201,6 +202,10 @@ vars.walkLoop = function() {
 			if ((block == 1) || vars.encounteredMon) {
 				user.x = revert.x;
 				user.y = revert.y;
+			}
+			if (userid == user.userid && block == 2) {
+				var door = vars.doors[user.y + "," + user.x];
+				if (door) vars.loadMap(door);
 			}
 			var moved = false;
 			if (!(revert.x == user.x && revert.y == user.y)) moved = true;
@@ -301,12 +306,15 @@ vars.focusCamera = function() {
 };
 vars.loadMap = function(name) {
 	$.get("./maps/" + name, function(data) {
+		if (vars.username && vars.username.substr(0, 6) != "Guest ") vars.send('/start ' + name);
 		var data = data.split('\n');
 		var name = data[0].split(':')[1],
 			minMonLevel = Math.floor(data[1].split(':')[1]),
 			mons = JSON.parse(data[2].split(':')[1]),
-			startingPosition = data[3].split(':')[1].split(','),
-			doors = JSON.parse(data[4].split(':')[1]);
+			startingPosition = data[3].split(':')[1].split(',');
+		var doorsJSON = data[4].split(':');
+		doorsJSON.splice(0, 1);
+		var doors = JSON.parse(doorsJSON.join(':'));
 		vars.mapName = name;
 		vars.minMonLevel = minMonLevel;
 		vars.encounterMons = mons;
@@ -314,8 +322,8 @@ vars.loadMap = function(name) {
 		data.splice(0, 5);
 		
 		vars.startingPosition = {
-			x: Math.floor(startingPosition[0]),
-			y: Math.floor(startingPosition[1])
+			x: Math.floor(startingPosition[1]),
+			y: Math.floor(startingPosition[0])
 		};
 		
 		var img = new Image();
@@ -335,6 +343,17 @@ vars.loadMap = function(name) {
 				if (!vars.map[y]) vars.map[y] = new Array();
 				vars.map[y].push(Math.floor(ray[x]));
 			}
+		}
+		//clear players
+		var userid = toId(vars.username);
+		var user = vars.players[userid];
+		for (var i in vars.players) {
+			var uid = vars.players[i].userid;
+			if (uid != userid) $("#p" + uid).remove();
+		}
+		if (user) {
+			user.x = vars.startingPosition.x;
+			user.y = vars.startingPosition.y;
 		}
 		vars.focusCamera();
 	});
@@ -411,7 +430,7 @@ vars.checkLearnMove = function(monKey) {
 					if (!isNaN(levelLearned) && (levelLearned == mon.level)) {
 						//if levelLearned is a number && if we meet the level requirements to learn said move
 						var amountMovesHave = mon.moves.length;
-						if (amountMovesHave == 4) {
+						if (amountMovesHave >= 4) {
 							//different kind of prompt that asks what kind of move to replace
 							function prompty(errMsg) {
 								var msg = (errMsg || "") + "Your " + mon.species + " wants to learn a new move! (" + move.name + ") but you already have 4 moves. Would you like to replace a move?\n\n";
@@ -830,6 +849,11 @@ vars.receive = function(data) {
 			$(".closeX, .exitButton").click();
 			vars.updateTeamOrder();
 			break;
+		case 'e':
+		case 'end':
+		case 'disconnectPlayer':
+			$("#p" + parts[1]).remove();
+			break;
 		case 'updateuser':
 			if (parts[1].substr(0, 6) != "Guest ") vars.send('/start ' + vars.mapName);
 			break;
@@ -1013,7 +1037,7 @@ function chance(percent) {
 	var random = Math.floor(Math.random() * 100) + 1;
 	if (random > percent) return false;
 	return true;
-	}
+}
 Tools.fastUnpackTeam = function (buf) {
 	if (!buf) return null;
 

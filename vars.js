@@ -7,8 +7,8 @@ vars.map = new Array();
 vars.mapName = "start";
 vars.fps = 1000 / 10;
 vars.block = {
-	x: 20, //amount on x axis
-	y: 15, //amount on y axis
+	x: 40, //amount on x axis (26 on pokemmo)
+	y: 30, //amount on y axis (14 on pokemmo)
 	width: 16,
 	height: 16,
 };

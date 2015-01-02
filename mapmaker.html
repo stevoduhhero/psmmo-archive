@@ -103,6 +103,7 @@
 				$($("hr")[(y * blocksInRow) + x]).attr("class", fill);
 				if (!vars.map[y]) vars.map[y] = new Array();
 				vars.map[y][x] = fill;
+				console.log('"' + y + ',' + x + '":"mapname",');
 			};
 			vars.toString = function(map) {
 				var insides = '';
@@ -110,7 +111,7 @@
 				insides += 'minMonLevel:1\n';
 				insides += 'mons:["ralts4", "metapod3", "bagon2", "pinsir1", "mew0"]\n';
 				insides += 'startingPosition:0,0\n';
-				insides += 'doors:[]\n';
+				insides += 'doors:{}\n';
 				//doors:[[x, y, link], [x, y, link]]\n
 				for (var y = 0; y < map.length; y++) {
 					var row = map[y];
@@ -139,8 +140,10 @@
 				var name = data[0].split(':')[1],
 					minMonLevel = Math.floor(data[1].split(':')[1]),
 					mons = JSON.parse(data[2].split(':')[1]),
-					startingPosition = data[3].split(':')[1].split(','),
-					doors = JSON.parse(data[4].split(':')[1]);
+					startingPosition = data[3].split(':')[1].split(',');
+				var doorsJSON = data[4].split(':');
+				doorsJSON.splice(0, 1);
+				var doors = JSON.parse(doorsJSON.join(':'));
 				data.splice(0, 5);
 				
 				vars.mapName = name;
