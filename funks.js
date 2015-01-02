@@ -15,7 +15,12 @@ vars.init = function() {
 	vars.socket = sock;
 	
 	if (!vars.team) vars.chooseStarterPrompt();
-
+	
+	$(window).focus(function() {
+		vars.windowFocus = true;
+	}).blur(function() {
+		vars.windowFocus = false;
+	});
 	$(document).keydown(function(e) {
 		vars.key(e.keyCode);
 	}).keyup(function(e) {
@@ -212,7 +217,7 @@ vars.walkLoop = function() {
 			if (moved) {
 				if (!vars.encounteredMon && block == 3 && userid == user.userid) vars.encounterMon();
 				if (user.userid == userid) vars.focusCamera(); else {
-					sprite.animate({
+					sprite[vars.animate()]({
 						left: (vars.block.width * user.x) + 'px',
 						top: (vars.block.height * user.y) + 'px'
 					}, vars.fps);
@@ -233,7 +238,7 @@ vars.updatePlayer = function(player) {
 	var user = vars.players[uid];
 	user.x = x;
 	user.y = y;
-	$("#p" + uid).animate({
+	$("#p" + uid)[vars.animate()]({
 		left: (vars.block.width * user.x) + 'px',
 		top: (vars.block.height * user.y) + 'px'
 	}, vars.fps);
@@ -296,9 +301,9 @@ vars.focusCamera = function() {
 	};
 	left = (tar.x * vars.block.width) - ((showBlocks.x / 2) * vars.block.width);
 	top = (tar.y * vars.block.height) - ((showBlocks.y / 2) * vars.block.height);
-	$("#container .mapimg").css({
+	vars.animate("#container .mapimg", {
 		"background-position": (-left) + "px " + (-top) + "px"
-	});
+	}, vars.fps);
 	$("#players").css({
 		left: -left + "px",
 		top: -top + "px"
@@ -471,16 +476,17 @@ vars.gainExp = function(el, slot) {
 			mon.exp = mon.exp - mon.nextLevelExp;
 			mon.nextLevelExp += 50;
 			mon.level++;
-			$(el).css("width", "0%");
-			if (mon.level > 100) {
-				mon.level = 100;
-				mon.exp = 0;
-				mon.nextLevelExp = 0;
-			}
-			alert("Your pokemon just leveled up to level " + mon.level + ".");
-			vars.checkLearnMove(monKey);
-			vars.checkEvolve(monKey);
-			if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
+			$(el).animate("width", "0%", 500, function() {
+				if (mon.level > 100) {
+					mon.level = 100;
+					mon.exp = 0;
+					mon.nextLevelExp = 0;
+				}
+				alert("Your pokemon just leveled up to level " + mon.level + ".");
+				vars.checkLearnMove(monKey);
+				vars.checkEvolve(monKey);
+				if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
+			});
 		}
 	}
 	vars.expDivison = new Object();
@@ -489,7 +495,6 @@ vars.gainExp = function(el, slot) {
 	vars.updateTeamOrder();
 };
 vars.differentMonInfo = function(who, slot, el) {
-	console.log(who + "::" + slot + "::" + $(el).length);
 	if (who == "you") {
 		vars.expDivision[slot] = true;
 		vars.updateExp(el, slot, "css");
@@ -630,7 +635,64 @@ vars.updateTeamOrder = function() {
 	}
 	$("#teamOrder").html(insides);
 };
-
+vars.startAnims = function() {
+	if (vars.startedAnims) return;
+	vars.startedAnims = true;
+	vars.startAnimLoop();
+};
+vars.startAnimLoop = function() {
+	var anim = vars.anims[0];
+	if (!anim) return vars.startedAnims = false;
+	var el = $(anim[0]),
+		currentPos = anim[1],
+		incrementPerFrame = anim[2],
+		frame = anim[3],
+		totalFrames = anim[4],
+		timePerFrame = anim[5];
+	var newPos = {
+		x: currentPos.x + incrementPerFrame.x,
+		y: currentPos.y + incrementPerFrame.y
+	};
+	el.css('background-position', newPos.x + 'px ' + newPos.y + 'px');
+	
+	anim[1] = newPos;
+	anim[3]++;
+	if (anim[3] == totalFrames) vars.anims.splice(0, 1);
+	setTimeout(vars.startAnimLoop, timePerFrame);
+};
+vars.animate = function(el, info, t, c) {
+	var type = 'css';
+	if (vars.windowFocus) type = 'animate';
+	if (!el) return type;
+	var el = $(el);
+	if (type == 'css') return el.css(info);
+	if (info['background-position']) {
+		var newPos = info['background-position'],
+			currentPos = el.css('background-position');
+		newPos = {
+			x: Math.floor(newPos.split(' ')[0].replace('px', '').replace('%', '')),
+			y: Math.floor(newPos.split(' ')[1].replace('px', '').replace('%', ''))
+		};
+		currentPos = {
+			x: Math.floor(currentPos.split(' ')[0].replace('px', '').replace('%', '')),
+			y: Math.floor(currentPos.split(' ')[1].replace('px', '').replace('%', ''))
+		};
+		if (!t) t = 1000;
+		var totalFrames = t / vars.fps;
+		var difference = {
+			x: (newPos.x - currentPos.x),
+			y: (newPos.y - currentPos.y)
+		};
+		var incrementPerFrame = {
+			x: difference.x / totalFrames,
+			y: difference.y / totalFrames
+		};
+		vars.anims.push([el, currentPos, incrementPerFrame, 0, totalFrames, 1000 / vars.fps]);
+		delete info['background-position'];
+		if (Object.keys(info).length) el.animate(info, t, c);
+	} else el.animate(info, t, c);
+	vars.startAnims();
+};
 
 
 
@@ -804,6 +866,7 @@ vars.receive = function(data) {
 			var players = parts[1].split(']');
 			for (var i in players) {
 				var player = players[i].split('[');
+				if (!player[2]) continue;
 				vars.newPlayer(player[2]);
 				vars.updatePlayer(player);
 			}

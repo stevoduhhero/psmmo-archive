@@ -42,6 +42,9 @@ vars.items = new Object();
 vars.team = new Array();
 vars.expDivision = new Object();
 vars.focusedInput = false;
+vars.windowFocus = true;
+vars.anims = new Array();
+vars.startedAnims = false;
 (function() {
 	for (var step = 0; step < 24; step++) {
 		var walkOrRunStep = "walk";
