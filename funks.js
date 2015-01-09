@@ -42,6 +42,15 @@ vars.init = function() {
 				vars.updateTeamOrder();
 			}
 		}
+	}).on("click", ".nametag", function() {
+		if (vars.countBattles()) return alert("Already in a battle.");
+		var userid = toId(this.innerHTML);
+		if (!vars.players[userid] || userid == toId(vars.username)) return;
+		var chall = confirm("Are you sure you would like to challenge '" + userid + "' to a battle?");
+		if (chall) {
+			vars.send('/utm ' + Tools.packTeam(vars.team));
+			vars.send('/challenge ' + userid + ", ou");
+		}
 	});
 };
 vars.chooseStarterPrompt = function() {
@@ -131,7 +140,12 @@ vars.resize = function() {
 			body = $("body");
 	var spaceAvailable = body.height() - canvas.height();
 	var percentZoom = spaceAvailable / canvas.height() * 100;
-	canvas.css("zoom", 100 + percentZoom + "%");
+	canvas.css({
+		"zoom": 100 + percentZoom + "%",
+		//make it work on firefox
+		"-moz-transform": "scale(" + ((100 + percentZoom) / 100) + " )",
+		"-moz-transform-origin": "0 0",
+	});
 	
 	var leftOvers = (body.width() - (canvas.width() * ((100 + percentZoom) / 100)));
 	$("#rightPanel").width(leftOvers);
@@ -152,7 +166,7 @@ vars.key = function(key, keyup) {
 		}
 		return false;
 	}
-	if (vars.encounteredMon) return;
+	if (vars.encounteredMon || vars.countBattles()) return;
 	var condition = (dir != user.direction && !vars.heldKeys[key]);
 	if (keyup && user.direction == dir) {
 		vars.stopWalking();
@@ -168,6 +182,11 @@ vars.key = function(key, keyup) {
 		vars.send('/mmo start.' + dir);
 	}
 	if (keyup) delete vars.heldKeys[key]; else vars.heldKeys[key] = true;
+};
+vars.countBattles = function() {
+	var num = 0;
+	for (var i in vars.rooms) if (vars.rooms[i].battle) num++;
+	return num;
 };
 vars.stopWalking = function() {
 	var user = vars.players[toId(vars.username)];
@@ -204,7 +223,7 @@ vars.walkLoop = function() {
 			var block = vars.map[user.y];
 			if (block) block = block[user.x];
 			if (block === undefined) block = 0; //block doesnt exist, blackness
-			if ((block == 1) || vars.encounteredMon) {
+			if ((block == 1) || vars.encounteredMon || vars.countBattles()) {
 				user.x = revert.x;
 				user.y = revert.y;
 			}
@@ -403,7 +422,17 @@ vars.checkEvolve = function(monKey) {
 				var evolveOrNaw = confirm("Your " + mon.species + " would like to evolve into a " + evolution.species + ".");
 				if (evolveOrNaw) {
 					if (vars.team[monKey].species == vars.team[monKey].nickname) vars.team[monKey].nickname = evolution.species;
+					var ability = mon.ability,
+						keepAbility = false;
+					for (var i in evolution.abilities) if (evolution.abilities[i] == ability) keepAbility = true;
+					if (!keepAbility) {
+						//random ability
+						var abilities = Object.keys(evolution.abilities);
+						var randomNum = Math.floor(Math.random() * abilities.length);
+						ability = evolution.abilities[abilities[randomNum]];
+					}
 					vars.team[monKey].species = evolution.species;
+					vars.team[monKey].ability = ability;
 				}
 			}
 		}
@@ -735,6 +764,25 @@ vars.login = function(name, password) {
 		}
 	}, 'text');
 };
+vars.acceptChallenge = function(username, tier) {
+	if (BattleFormats[tier].team == "preset") {
+		//random you don't need a team
+		vars.send('/accept ' + username);
+		return false;
+	}
+	if (vars.team) {
+		vars.send('/utm ' + Tools.packTeam(vars.team));
+		vars.send('/accept ' + username);
+		return false;
+	}
+	alert("You have no team.");
+};
+vars.rejectChallenge = function(username) {
+	vars.send('/reject ' + username);
+};
+vars.cancelChallenge = function(username) {
+	vars.send('/cancelchallenge ' + username);
+};
 vars.openBattle = function(id, type, nojoin) {
 	var el = $('<div class="ps-room"></div>').appendTo('body');
 	var room = this.rooms[id] = new BattleRoom({
@@ -919,7 +967,10 @@ vars.receive = function(data) {
 			$("#p" + parts[1]).remove();
 			break;
 		case 'updateuser':
+		case 'formats':
+			console.log("\n\n\n\n\n\t\t\t\t\tNUMBA1\n\n\n\n\n");
 			if (parts[1].substr(0, 6) != "Guest ") vars.send('/start ' + vars.mapName);
+			if (typeof BattleFormats == "undefined") vars.parseFormats(parts); //formats line
 			break;
 		
 		
@@ -929,30 +980,6 @@ vars.receive = function(data) {
 		case 'challstr':
 			vars.challengekeyid = parseInt(parts[1], 10);
 			vars.challenge = parts[2];
-			break;
-
-
-		case 'updateuser':
-			/*
-			var nlIndex = data.indexOf('\n');
-			if (nlIndex > 0) {
-				this.receive(data.substr(nlIndex+1));
-				nlIndex = parts[3].indexOf('\n');
-				parts[3] = parts[3].substr(0, nlIndex);
-			}
-			var name = parts[1];
-			var named = !!+parts[2];
-			this.user.set({
-				name: name,
-				userid: toUserid(name),
-				named: named,
-				avatar: parts[3]
-			});
-			this.user.setPersistentName(named ? name : null);
-			if (named) {
-				this.trigger('init:choosename');
-			}
-			*/
 			break;
 
 		case 'nametaken':
@@ -971,12 +998,12 @@ vars.receive = function(data) {
 			var insides = '';
 			$(".challenges").empty();
 			for (var from in froms) {
-				var icons = 'You haven\'t set a team yet. (Hint: go to teambuilder)';
-				if (vars.team && Tools.teams[vars.team]) {
-					icons = Tools.teams[vars.team].name;
-					for (var i in Tools.teams[vars.team].pokemon) {
-						var info = exports.BattlePokedex[toId(Tools.teams[vars.team].pokemon[i].species)];
-						icons += '<span class="col iconcol" style="width: 32px;height: 24px;' + Tools.getIcon(info) + '"></span>';
+				var icons = 'You have no teams.';
+				if (vars.team) {
+					icons = "";
+					for (var i in vars.team) {
+						var info = exports.BattlePokedex[toId(vars.team[i].species)];
+						icons += '<span class="col iconcol" style="width: 32px;height: 24px;display: inline-block;' + Tools.getIcon(info) + '"></span>';
 					}
 				}
 				if (froms[from].split('random').length - 1 > 0) icons = '';
@@ -984,11 +1011,10 @@ vars.receive = function(data) {
 				insides += '<div class="challengeHeader">';
 				insides += 'Challenge from: ' + from;
 				insides += '</div>';
-				insides += 'Tier: ' + froms[from];
 				insides += '<center>';
 				insides += '<div class="teamselection">' + icons + '</div>';
-				insides += '<button onclick="Tools.acceptChallenge(\'' + from + '\', \'' + froms[from] + '\');">Accept</button>';
-				insides += ' <button onclick="Tools.rejectChallenge(\'' + from + '\');">Reject</button>';
+				insides += '<button onclick="vars.acceptChallenge(\'' + from + '\', \'' + froms[from] + '\');">Accept</button>';
+				insides += ' <button onclick="vars.rejectChallenge(\'' + from + '\');">Reject</button>';
 				insides += '</center>';
 				insides += '</div>';
 			}
@@ -996,7 +1022,7 @@ vars.receive = function(data) {
 			if (tos) {
 				insides += '<div style="background: white;width: 300px;padding: 10px;border: 1px solid black;border-radius: 10px;">';
 				insides += 'Waiting on: ' + tos.to + '(' + tos.format + ')<br />';
-				insides += '<button onclick="Tools.cancelChallenge(\'' + tos.to + '\');">Cancel Challenge</button>';
+				insides += '<button onclick="vars.cancelChallenge(\'' + tos.to + '\');">Cancel Challenge</button>';
 				insides += '</div>';
 			}
 			$(".challenges").html(insides);
@@ -1012,6 +1038,7 @@ vars.receive = function(data) {
 			break;
 
 		case 'popup':
+			alert(data);
 			//this.addPopupMessage(data.substr(7).replace(/\|\|/g, '\n'));
 			//if (this.rooms['']) this.rooms[''].resetPending();
 			break;
@@ -1040,6 +1067,89 @@ vars.receive = function(data) {
 			}
 			break;
 	}
+};
+vars.parseFormats = function(formatsList) {
+	var isSection = false;
+	var section = '';
+
+	var column = 0;
+	var columnChanged = false;
+
+	BattleFormats = {};
+	for (var j=1; j<formatsList.length; j++) {
+		if (isSection) {
+			section = formatsList[j];
+			isSection = false;
+		} else if (formatsList[j] === '' || (formatsList[j].substr(0, 1) === ',' && !isNaN(formatsList[j].substr(1)))) {
+			isSection = true;
+
+			if (formatsList[j]) {
+				var newColumn = parseInt(formatsList[j].substr(1)) || 0;
+				if (column !== newColumn) {
+					column = newColumn;
+					columnChanged = true;
+				}
+			}
+		} else {
+			var searchShow = true;
+			var challengeShow = true;
+			var team = null;
+			var name = formatsList[j];
+			if (name.substr(name.length-2) === ',#') { // preset teams
+				team = 'preset';
+				name = name.substr(0,name.length-2);
+			}
+			if (name.substr(name.length-2) === ',,') { // search-only
+				challengeShow = false;
+				name = name.substr(0,name.length-2);
+			} else if (name.substr(name.length-1) === ',') { // challenge-only
+				searchShow = false;
+				name = name.substr(0,name.length-1);
+			}
+			var id = toId(name);
+			var isTeambuilderFormat = searchShow && !team;
+			var teambuilderFormat = undefined;
+			if (isTeambuilderFormat) {
+				var parenPos = name.indexOf('(');
+				if (parenPos > 0 && name.charAt(name.length-1) === ')') {
+					// variation of existing tier
+					teambuilderFormat = toId(name.substr(0, parenPos));
+					if (BattleFormats[teambuilderFormat]) {
+						BattleFormats[teambuilderFormat].isTeambuilderFormat = true;
+					} else {
+						BattleFormats[teambuilderFormat] = {
+							id: teambuilderFormat,
+							name: $.trim(name.substr(0, parenPos)),
+							team: team,
+							section: section,
+							column: column,
+							rated: false,
+							isTeambuilderFormat: true,
+							effectType: 'Format'
+						};
+					}
+					isTeambuilderFormat = false;
+				}
+			}
+			if (BattleFormats[id] && BattleFormats[id].isTeambuilderFormat) {
+				isTeambuilderFormat = true;
+			}
+			BattleFormats[id] = {
+				id: id,
+				name: name,
+				team: team,
+				section: section,
+				column: column,
+				searchShow: searchShow,
+				challengeShow: challengeShow,
+				rated: searchShow && id.substr(0,7) !== 'unrated',
+				teambuilderFormat: teambuilderFormat,
+				isTeambuilderFormat: isTeambuilderFormat,
+				effectType: 'Format'
+			};
+		}
+	}
+	BattleFormats._supportsColumns = columnChanged;
 };
 vars.removeChat = function(id) {
 	var room = this.rooms[id];

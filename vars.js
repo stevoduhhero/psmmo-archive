@@ -19,7 +19,7 @@ vars.blockTypes = {
 	grass: 3,
 	water: 4,
 };
-vars.spritesURL = "../psmmo/sprites.png";
+vars.spritesURL = "./sprites.png";
 vars.character = {
 	direction: false,
 	cycle: 0,

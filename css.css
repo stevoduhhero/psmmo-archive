@@ -225,3 +225,10 @@ a.closeX {
 .battle-log {
 	background: transparent;
 }
+.challenges {
+	position: absolute;
+	bottom: 3px;
+	right: 3px;
+	z-index: 12;
+	width: 323px;
+}
