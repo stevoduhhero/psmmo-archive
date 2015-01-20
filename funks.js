@@ -49,7 +49,62 @@ vars.init = function() {
 		var chall = confirm("Are you sure you would like to challenge '" + userid + "' to a battle?");
 		if (chall) {
 			vars.send('/utm ' + Tools.packTeam(vars.team));
-			vars.send('/challenge ' + userid + ", ou");
+			vars.send('/challenge ' + userid + ", psmmo");
+		}
+	}).on("touchstart mousedown", "#joystick", function(e) {
+		var t = e.originalEvent.touches;
+		if (!t) t = e; else t = t[0];
+		vars.touchingJoystick = t;
+		if (vars.touchingJoystick) {
+			e.preventDefault();
+			return false;
+		}
+	}).on("touchmove mousemove", function(e) {
+		var t = e.originalEvent.touches;
+		if (!t) t = e; else t = t[0];
+		if (vars.touchingJoystick) {
+			var diff = {
+				x: -(vars.touchingJoystick.pageX - t.pageX),
+				y: -(vars.touchingJoystick.pageY - t.pageY)
+			};
+			if (diff.x > 20) diff.x = 20;
+			if (diff.x < -20) diff.x = -20;
+			if (diff.y > 20) diff.y = 20;
+			if (diff.y < -20) diff.y = -20;
+			var centr = $('#centro');
+			centr.css({
+				left: ($("#joystick").width() / 2 + diff.x) + 'px',
+				top: ($("#joystick").height() / 2 + diff.y) + 'px'
+			});
+			var directionKeys = {up: 38, left: 37, right: 39, down: 40};
+			var orientation = "";
+			if (Math.abs(diff.x) > Math.abs(diff.y)) {
+				orientation = "right";
+				if (diff.x < 0) orientation = "left"; 
+			} else {
+				orientation = "down";
+				if (diff.y < 0) orientation = "up";
+			}
+			if (orientation && vars.username && (Math.abs(diff.x) >= 2 || Math.abs(diff.y >= 2))) {
+				vars.key(directionKeys[vars.players[toId(vars.username)].direction], true);
+				vars.key(directionKeys[orientation]);
+				vars.touchingJoystick = t;
+			}
+			lastjoystick = diff;
+		}
+		if (vars.touchingJoystick) {
+			e.preventDefault();
+			return false;
+		}
+	}).on("touchend mouseup", function(e) {
+		if (vars.touchingJoystick) {
+			vars.touchingJoystick = false;
+			$("#centro").animate({
+				left: "50%",
+				top: "50%"
+			}, 50);
+			var directionKeys = {up: 38, left: 37, right: 39, down: 40};
+			if (vars.username) vars.key(directionKeys[vars.players[toId(vars.username)].direction], true);
 		}
 	});
 };
@@ -199,6 +254,12 @@ vars.initWalkLoop = function() {
 	vars.walking = true;
 };
 vars.walkLoop = function() {
+	function endLoop() {
+		if (walkers) walLoopTimeout = setTimeout("vars.walkLoop();", vars.fps); else {
+			delete vars.walking;
+		}
+	}
+	if (vars.focusing) return endLoop();
 	var walkers = false,
 		userid = toId(vars.username);
 	for (var i in vars.players) {
@@ -216,10 +277,14 @@ vars.walkLoop = function() {
 			
 			walkers = true;
 			var revert = {x: user.x, y: user.y};
-			if (dir == "up") user.y--;
-			if (dir == "down") user.y++;
-			if (dir == "left") user.x--;
-			if (dir == "right") user.x++;
+			user.stepFrameCount++;
+			if (user.stepFrameCount >= user.framesPerStep) {
+				if (dir == "up") user.y--;
+				if (dir == "down") user.y++;
+				if (dir == "left") user.x--;
+				if (dir == "right") user.x++;
+				user.stepFrameCount = 0;
+			}
 			var block = vars.map[user.y];
 			if (block) block = block[user.x];
 			if (block === undefined) block = 0; //block doesnt exist, blackness
@@ -244,9 +309,7 @@ vars.walkLoop = function() {
 			}
 		}
 	}
-	if (walkers) walLoopTimeout = setTimeout("vars.walkLoop();", vars.fps); else {
-		delete vars.walking;
-	}
+	endLoop();
 };
 vars.updatePlayer = function(player) {
 	var name = player[2],
@@ -270,13 +333,20 @@ vars.newPlayer = function(name) {
 				cycleType: "walk",
 				encountered: "",
 				x: vars.startingPosition.x,
-				y: vars.startingPosition.y
+				y: vars.startingPosition.y,
+				framesPerStep: 1,
+				stepFrameCount: 0,
 			};	
 	}
 	var userid = toId(name);
 	var user = playerVars();
 	user.name = name;
 	user.userid = userid;
+	if (userid == toId(vars.username) && vars.newStartingPosition) {
+		user.x = vars.newStartingPosition.x;
+		user.y = vars.newStartingPosition.y;
+		delete vars.newStartingPosition;
+	}
 	this.players[userid] = user;
 	
 	var insides = '';
@@ -311,6 +381,7 @@ vars.newPlayer = function(name) {
 	}
 };
 vars.focusCamera = function() {
+	if (vars.focusing) return;
 	var tar = vars.players[toId(vars.username)] || vars.startingPosition,
 		left = 0,
 		top = 0;
@@ -320,16 +391,49 @@ vars.focusCamera = function() {
 	};
 	left = (tar.x * vars.block.width) - ((showBlocks.x / 2) * vars.block.width);
 	top = (tar.y * vars.block.height) - ((showBlocks.y / 2) * vars.block.height);
-	vars.animate("#container .mapimg", {
-		"background-position": (-left) + "px " + (-top) + "px"
-	}, vars.fps);
-	$("#players").css({
-		left: -left + "px",
-		top: -top + "px"
+	if ($.browser.mozilla) {
+		$("#container .mapimg").css({
+			'background-position': (-left) + "px " + (-top) + "px",
+		});
+		$("#players").css({
+			left: -left + "px",
+			top: -top + "px"
+		});
+		vars.focusing = false;
+	} else {
+		$("#container .mapimg").animate({
+			'background-position-x': (-left) + "px",
+			'background-position-y': (-top) + "px",
+		}, vars.fps / 3, 'linear', function() {
+			vars.focusing = false;
+		});
+		$("#players").animate({
+			left: -left + "px",
+			top: -top + "px"
+		}, vars.fps / 3);
+	}
+};
+vars.getScript = function(url, callback, cache) {
+	$.ajax({
+		type: "GET",
+		url: url,
+		success: callback,
+		cache: cache
 	});
 };
 vars.loadMap = function(name) {
-	$.get("./maps/" + name, function(data) {
+	var splint = name.split('|'),
+		newStartingPosition = false;
+	if (splint[1]) {
+		name = splint[0];
+		newStartingPosition = splint[1].split(',');
+		newStartingPosition = {
+			x: Math.floor(newStartingPosition[1]),
+			y: Math.floor(newStartingPosition[0])
+		};
+	}
+	
+	vars.getScript("./maps/" + name, function(data) {
 		var data = data.split('\n');
 		var name = data[0].split(':')[1],
 			minMonLevel = Math.floor(data[1].split(':')[1]),
@@ -379,6 +483,11 @@ vars.loadMap = function(name) {
 		if (user) {
 			user.x = vars.startingPosition.x;
 			user.y = vars.startingPosition.y;
+			if (newStartingPosition) {
+				user.x = newStartingPosition.x;
+				user.y = newStartingPosition.y;
+				vars.newStartingPosition = newStartingPosition;
+			}
 		}
 		vars.focusCamera();
 	});
@@ -492,14 +601,18 @@ vars.checkLearnMove = function(monKey) {
 		}
 	}
 };
-vars.gainExp = function(el, slot) {
+vars.gainExp = function(el, slot, oppLevel) {
+	if (!oppLevel) oppLevel = 1;
 	var numMons = Object.keys(vars.expDivision).length,
 		expGain = 100;
 	expGain = expGain / numMons;
 	for (var monKey in vars.expDivision) {
 		var mon = vars.team[monKey];
-		mon.exp += expGain;
-		if (!mon.exp) return false; //bug, glitch, idfk
+		if (mon.level == 100) continue;
+		var gain = expGain * (oppLevel - mon.level);
+		if (gain < expGain) gain = expGain;
+		mon.exp += gain;
+		if (!mon.exp) mon.exp = 0;
 		if (mon.exp >= mon.nextLevelExp) {
 			var oldSpecies = mon.species;
 			mon.exp = mon.exp - mon.nextLevelExp;
@@ -509,7 +622,7 @@ vars.gainExp = function(el, slot) {
 				if (mon.level > 100) {
 					mon.level = 100;
 					mon.exp = 0;
-					mon.nextLevelExp = 0;
+					delete mon.nextLevelExp;
 				}
 				alert("Your pokemon just leveled up to level " + mon.level + ".");
 				vars.checkLearnMove(monKey);
@@ -579,6 +692,7 @@ vars.useItem = function(itemId) {
 		pokeball: function(ball) {
 			var monId = vars.encounteredMon;
 			if (!monId) return "You can't use your pokeball because you aren't playing against any wild pokemon.";
+			if (vars.team.length == 6) return "You already have 6 pokemon.";
 			var pokemon = BattlePokedex[monId];
 			//cue the throw pokeball animation
 			if (!ball) ball = "pokeball";
@@ -759,6 +873,7 @@ vars.login = function(name, password) {
 			vars.username = name;
 			$("#loginform").fadeOut();
 			vars.send('/trn ' + name + ',0,' + data.assertion);
+			vars.send('/join lobby'); //REMOVE THIS WHEN U STOP CARING ABOUT LOBBY USER COUNT
 		} else {
 			alert("Info is wrong or you're not registered.");
 		}
@@ -1208,7 +1323,7 @@ function eatcookie(name) {
 	document.cookie = name + '=; expires=Thu, 01-Jan-70 00:00:01 GMT;';
 }
 function chance(percent) {
-	var random = Math.floor(Math.random() * 100) + 1;
+	var random = Math.round(Math.random() * 100);
 	if (random > percent) return false;
 	return true;
 }

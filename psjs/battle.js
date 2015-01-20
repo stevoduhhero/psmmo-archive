@@ -1909,8 +1909,9 @@ var Side = (function () {
 		var expEl = this.battle.$expEl,
 			who = ((this === this.battle.mySide) ? "you" : "opp");
 		if (who == "opp") {
-			var actualTeamSlot = vars.slotFromPackage(this.battle.mySide.active[0]);
-			vars.gainExp(expEl, actualTeamSlot);
+			var actualTeamSlot = vars.slotFromPackage(this.battle.mySide.active[0]),
+				oppLevel = this.battle.mySide.foe.pokemon[0].level;
+			vars.gainExp(expEl, actualTeamSlot, oppLevel);
 			vars.updateExp(expEl, actualTeamSlot, "animate", 500);
 		}
 	};
