@@ -1908,7 +1908,7 @@ var Side = (function () {
 		//mmo gain exp
 		var expEl = this.battle.$expEl,
 			who = ((this === this.battle.mySide) ? "you" : "opp");
-		if (who == "opp") {
+		if (who == "opp" && this.battle.tier == "psmmo") {
 			var actualTeamSlot = vars.slotFromPackage(this.battle.mySide.active[0]),
 				oppLevel = this.battle.mySide.foe.pokemon[0].level;
 			vars.gainExp(expEl, actualTeamSlot, oppLevel);

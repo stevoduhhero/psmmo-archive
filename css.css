@@ -232,3 +232,49 @@ a.closeX {
 	z-index: 12;
 	width: 323px;
 }
+.pmbox {
+	position: absolute;
+	top: 20%;
+	left: 50%;
+	margin-left: -167.5px;
+	z-index: 15;
+	background: white;
+	opacity: 0.9;
+	outline: 1px solid #b6b6b6;
+	width: 335px;
+	height: 150px;
+}
+.pmheader {
+	background: #e6e6e6;
+	cursor: pointer;
+	margin-top: -22px;
+	height: 21px;
+	border-radius: 10px 10px 0px 0px;
+	text-align: center;
+	background: rgb(106, 223, 197);
+}
+.pmexit {
+	float: right;
+	color: red;
+	font-weight: bold;
+	text-align: right;
+}
+.pmlogs {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	height: 100%;
+	background: rgb(237, 255, 251);
+}
+.pminput {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	border: none;
+	outline: none;
+	box-shadow: 0em 0em 0em 1px #b6b6b6;
+	background: rgb(199, 255, 242);
+}
+.pmbox button {
+	width: 24%;
+	margin-left: 1%;
+}

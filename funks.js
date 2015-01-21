@@ -1,3 +1,35 @@
+confirmies = new Object();
+answerConfirmy = function(t, response) {
+	var ray = confirmies[t];
+	var callback = ray[0],
+		args = Array.prototype.slice.call(ray[1]);
+	args.push(response);
+	vars[callback].apply(this, args);
+	delete confirmies[t];
+};
+confirmy = function(msg, callback, args) {return alerty(msg, [callback, args], "confirm");};
+prompty = function(msg, callback, args) {return alerty(msg, [callback, args], "prompt");};
+alerty = function(msg, info, type) {
+	var t = new Date() / 1,
+		addInputs = '';
+	if (type) {
+		if (type == "confirm") {
+			addInputs = '<br /><button onclick="answerConfirmy(' + t + ', true);$(\'#daddy' + t + '\').click();">YES</button><button onclick="answerConfirmy(' + t + ', false);$(\'#daddy' + t + '\').click();">NO</button>';
+		}
+		if (type == "prompt") {
+			addInputs = '<br /><input type="text" onkeypress="if (event.keyCode == 13) {answerConfirmy(' + t + ', this.value);$(\'#daddy' + t + '\').click();}" />';
+		}
+	}
+	$('body').prepend('\
+	<div id="daddy' + t + '" onclick="$(\'#baby' + t + '\').remove();$(this).remove();" style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;cursor: pointer;background: white;opacity: 0.5;z-index: 9999;"></div>\
+	<div id="baby' + t + '" style="width: 500px;height: 150px;margin-left: -250px;margin-top: -75px;position: absolute;top: 50%;left: 50%;background: white;outline: 2px solid rgb(175, 175, 171);z-index: 9999;">\
+	<div style="padding: 10px;font-size: 20px;text-align: center;">' + msg + ((info) ? addInputs : '') + '</div>\
+	</div>\
+	');
+	if (info) confirmies[t] = info;
+	return t;
+};
+
 vars.init = function() {
 	vars.openSaveData();
 	vars.loadMap(vars.mapName);
@@ -43,14 +75,10 @@ vars.init = function() {
 			}
 		}
 	}).on("click", ".nametag", function() {
-		if (vars.countBattles()) return alert("Already in a battle.");
+		if (vars.countBattles()) return alerty("Already in a battle.");
 		var userid = toId(this.innerHTML);
 		if (!vars.players[userid] || userid == toId(vars.username)) return;
-		var chall = confirm("Are you sure you would like to challenge '" + userid + "' to a battle?");
-		if (chall) {
-			vars.send('/utm ' + Tools.packTeam(vars.team));
-			vars.send('/challenge ' + userid + ", psmmo");
-		}
+		var chall = confirmy("Are you sure you would like to challenge '" + userid + "' to a battle?", "sendChallenge", [userid]);
 	}).on("touchstart mousedown", "#joystick", function(e) {
 		var t = e.originalEvent.touches;
 		if (!t) t = e; else t = t[0];
@@ -86,13 +114,29 @@ vars.init = function() {
 				if (diff.y < 0) orientation = "up";
 			}
 			if (orientation && vars.username && (Math.abs(diff.x) >= 2 || Math.abs(diff.y >= 2))) {
-				vars.key(directionKeys[vars.players[toId(vars.username)].direction], true);
-				vars.key(directionKeys[orientation]);
+				var player = vars.players[toId(vars.username)];
+				if (player.dir != orientation || !player.walking) {
+					vars.key(directionKeys[player.dir], true);
+					vars.key(directionKeys[orientation]);
+					player.dir = orientation;
+				}
 				vars.touchingJoystick = t;
 			}
 			lastjoystick = diff;
 		}
-		if (vars.touchingJoystick) {
+		if (Tools.dragPM) {
+			var el = $("#" + Tools.dragPM);
+			var coordinateY = t.pageY;
+			el.css({
+				left: (t.pageX - el.width() / 2) + "px",
+				top: coordinateY + "px",
+				margin: 0
+			});
+			var headerCoordinateY = el.offset().top;
+			if ($("#" + Tools.dragPM + " .pmheader").length) headerCoordinateY = $("#" + Tools.dragPM + " .pmheader").offset().top;
+			if (headerCoordinateY < 0) el.css("top", (Math.abs(headerCoordinateY) + t.pageY) + "px");
+		}
+		if (vars.touchingJoystick || Tools.dragPM) {
 			e.preventDefault();
 			return false;
 		}
@@ -106,7 +150,21 @@ vars.init = function() {
 			var directionKeys = {up: 38, left: 37, right: 39, down: 40};
 			if (vars.username) vars.key(directionKeys[vars.players[toId(vars.username)].direction], true);
 		}
+		Tools.dragPM = false;
+	}).on("keypress", ".pminput", function(e) {
+		if (e.keyCode == 13 && this.value) {
+			var msg = this.value;
+			var to = this.id.split("-")[0].replace("pminput", "");
+			vars.send('/msg ' + to + ',' + msg);
+			Tools.addPM(vars.username, msg, to);
+			this.value = "";
+		}
 	});
+};
+vars.sendChallenge = function(userid, doit) {
+	if (!doit) return;
+	vars.send('/utm ' + Tools.packTeam(vars.team));
+	vars.send('/challenge ' + userid + ", psmmo");
 };
 vars.chooseStarterPrompt = function() {
 	var insides = '',
@@ -246,7 +304,9 @@ vars.countBattles = function() {
 vars.stopWalking = function() {
 	var user = vars.players[toId(vars.username)];
 	user.walking = false;
+	if (vars.lastStop) if (vars.lastStop.x == user.x && vars.lastStop.y == user.y) return;
 	vars.send('/mmo stop.' + user.x + '.' + user.y);
+	vars.lastStop = {x: user.x, y: user.y};
 };
 vars.initWalkLoop = function() {
 	if (vars.walking) return;
@@ -528,24 +588,26 @@ vars.checkEvolve = function(monKey) {
 			var evolution = BattlePokedex[pokemon.evos[i]];
 			if (mon.level >= evolution.evoLevel) {
 				//cue evolving animation (growing shrinking shit thing)
-				var evolveOrNaw = confirm("Your " + mon.species + " would like to evolve into a " + evolution.species + ".");
-				if (evolveOrNaw) {
-					if (vars.team[monKey].species == vars.team[monKey].nickname) vars.team[monKey].nickname = evolution.species;
-					var ability = mon.ability,
-						keepAbility = false;
-					for (var i in evolution.abilities) if (evolution.abilities[i] == ability) keepAbility = true;
-					if (!keepAbility) {
-						//random ability
-						var abilities = Object.keys(evolution.abilities);
-						var randomNum = Math.floor(Math.random() * abilities.length);
-						ability = evolution.abilities[abilities[randomNum]];
-					}
-					vars.team[monKey].species = evolution.species;
-					vars.team[monKey].ability = ability;
-				}
+				var evolveOrNaw = confirmy("Your " + mon.species + " would like to evolve into a " + evolution.species + ".", "actuallyEvolve", [monKey, evolution]);
 			}
 		}
 	}
+};
+vars.actuallyEvolve = function(monKey, evolution, doit) {
+	if (!doit) return;
+	var mon = vars.team[monKey];
+	if (vars.team[monKey].species == vars.team[monKey].nickname) vars.team[monKey].nickname = evolution.species;
+	var ability = mon.ability,
+		keepAbility = false;
+	for (var i in evolution.abilities) if (evolution.abilities[i] == ability) keepAbility = true;
+	if (!keepAbility) {
+		//random ability
+		var abilities = Object.keys(evolution.abilities);
+		var randomNum = Math.floor(Math.random() * abilities.length);
+		ability = evolution.abilities[abilities[randomNum]];
+	}
+	vars.team[monKey].species = evolution.species;
+	vars.team[monKey].ability = ability;
 };
 vars.learnMove = function(move, monKey, replaceMove) {
 	var mon = vars.team[monKey];
@@ -576,7 +638,7 @@ vars.checkLearnMove = function(monKey) {
 						var amountMovesHave = mon.moves.length;
 						if (amountMovesHave >= 4) {
 							//different kind of prompt that asks what kind of move to replace
-							function prompty(errMsg) {
+							function promptyLoop(errMsg) {
 								var msg = (errMsg || "") + "Your " + mon.species + " wants to learn a new move! (" + move.name + ") but you already have 4 moves. Would you like to replace a move?\n\n";
 								for (var i in mon.moves) msg += "(" + (Math.abs(i) + 1) + ") " + mon.moves[i] + "\n";
 								msg += "\nEnter the move you want to replace or hit cancel.";
@@ -584,16 +646,16 @@ vars.checkLearnMove = function(monKey) {
 								if (typeof learnOrNaw == "string") {
 									var moveId = Math.abs(learnOrNaw) - 1;
 									if (isNaN(moveId) || moveId < 0 || moveId > 3) {
-										prompty("ERROR: '" + learnOrNaw + "' IS NOT AN OPTION.\n");
+										promptyLoop("ERROR: '" + learnOrNaw + "' IS NOT AN OPTION.\n");
 									} else {
 										vars.learnMove(move.name, monKey, moveId);
 									}
 								}
 							}
-							prompty();
+							promptyLoop();
 						} else {
 							vars.learnMove(move.name, monKey);
-							alert("Your " + mon.species + " learned " + move.name + "!");
+							alerty("Your " + mon.species + " learned " + move.name + "!");
 						}
 					}
 				}
@@ -602,35 +664,43 @@ vars.checkLearnMove = function(monKey) {
 	}
 };
 vars.gainExp = function(el, slot, oppLevel) {
-	if (!oppLevel) oppLevel = 1;
-	var numMons = Object.keys(vars.expDivision).length,
-		expGain = 100;
-	expGain = expGain / numMons;
-	for (var monKey in vars.expDivision) {
+	function gainIt() {
 		var mon = vars.team[monKey];
-		if (mon.level == 100) continue;
-		var gain = expGain * (oppLevel - mon.level);
-		if (gain < expGain) gain = expGain;
+		if (mon.level == 100) return;
 		mon.exp += gain;
-		if (!mon.exp) mon.exp = 0;
+		alerty("Your " + mon.species + " gained " + gain + " exp.");
 		if (mon.exp >= mon.nextLevelExp) {
+			$(el).css({
+				width: '0%'
+			});
+		}
+		while (mon.exp >= mon.nextLevelExp) {
 			var oldSpecies = mon.species;
 			mon.exp = mon.exp - mon.nextLevelExp;
 			mon.nextLevelExp += 50;
 			mon.level++;
-			$(el).animate("width", "0%", 500, function() {
-				if (mon.level > 100) {
-					mon.level = 100;
-					mon.exp = 0;
-					delete mon.nextLevelExp;
-				}
-				alert("Your pokemon just leveled up to level " + mon.level + ".");
-				vars.checkLearnMove(monKey);
-				vars.checkEvolve(monKey);
-				if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
-			});
+			if (mon.level > 100) {
+				mon.level = 100;
+				mon.exp = 0;
+				delete mon.nextLevelExp;
+			}
+			alerty("Your " + mon.species + " just leveled up to level " + mon.level + ".");
+			vars.checkLearnMove(monKey);
+			vars.checkEvolve(monKey);
+			if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
 		}
+		$(el).animate({
+			width: '0%'
+		}, 500);
 	}
+	var numMons = Object.keys(vars.expDivision).length,
+		gainPerLevelDifference = 100;
+	var difference = (oppLevel - (vars.team[slot].level));
+	var gain = gainPerLevelDifference * difference;
+	if (gain < gainPerLevelDifference) gain = gainPerLevelDifference;
+	if (Math.abs(difference) <= 5) gain += 50 + (50 / (Math.abs(difference) + 1));
+	gain = gain / numMons;
+	for (var monKey in vars.expDivision) gainIt();
 	vars.expDivison = new Object();
 	vars.encounteredMon = false;
 	
@@ -686,8 +756,11 @@ vars.changeBagInfo = function(itemId) {
 };
 vars.useItem = function(itemId) {
 	var item = BattleItems[itemId];
-	var use = confirm("Use a " + item.name + "?");
-	if (!use) return;
+	confirmy("Use a " + item.name + "?", "actuallyUseItem", arguments);
+};
+vars.actuallyUseItem = function(itemId, doit) {
+	if (!doit) return;
+	var item = BattleItems[itemId];
 	var items = {
 		pokeball: function(ball) {
 			var monId = vars.encounteredMon;
@@ -740,13 +813,13 @@ vars.useItem = function(itemId) {
 				vars.send('/mmo catchPokemon.' + monId);
 			} else {
 				//break out of ball
-				alert(pokemon.species + " broke free!");
+				alerty(pokemon.species + " broke free!");
 			}
 		},
 	};
-	if (!items[itemId]) alert("That items functionality hasn't been implemented yet... sorry"); else {
+	if (!items[itemId]) alerty("That items functionality hasn't been implemented yet... sorry"); else {
 		var error = items[itemId]();
-		if (error) return alert(error);
+		if (error) return alerty(error);
 		vars.items[itemId] -= 1;
 		if (vars.items[itemId] <= 0) delete vars.items[itemId];
 		$("#bag").hide();
@@ -836,6 +909,24 @@ vars.animate = function(el, info, t, c) {
 	} else el.animate(info, t, c);
 	vars.startAnims();
 };
+vars.addPokemon = function(unpackedMon, nickname) {
+	if (nickname) unpackedMon.nickname = nickname;
+	unpackedMon.exp = 0;
+	unpackedMon.nextLevelExp = (Math.abs(unpackedMon.level - 5) * 50);
+	vars.team.push(unpackedMon);
+	$(".closeX, .exitButton").click();
+	vars.updateTeamOrder();
+};
+vars.chooseNicknameLOOP = function(unpackedMon, nickname) {
+	var err;
+	if (typeof nickname == "string") {
+		if (nickname.length < 19 && nickname.length != 0) return vars.addPokemon(unpackedMon, nickname); else {
+			err = "ERROR: The nickname must be 1-18 characters.<br /><br />";
+		}
+	}
+	var msg = (err || "") + "Enter a nickname for your new " + unpackedMon.species;
+	prompty(msg, "chooseNicknameLOOP", [unpackedMon]);
+};
 
 
 
@@ -875,7 +966,7 @@ vars.login = function(name, password) {
 			vars.send('/trn ' + name + ',0,' + data.assertion);
 			vars.send('/join lobby'); //REMOVE THIS WHEN U STOP CARING ABOUT LOBBY USER COUNT
 		} else {
-			alert("Info is wrong or you're not registered.");
+			alerty("Info is wrong or you're not registered.");
 		}
 	}, 'text');
 };
@@ -890,7 +981,7 @@ vars.acceptChallenge = function(username, tier) {
 		vars.send('/accept ' + username);
 		return false;
 	}
-	alert("You have no team.");
+	alerty("You have no team.");
 };
 vars.rejectChallenge = function(username) {
 	vars.send('/reject ' + username);
@@ -957,7 +1048,9 @@ vars.receive = function(data) {
 		var room = this.rooms[roomid];
 		if (room) {
 			room.expired = true;
-			alert("hey mr user, this room expired.");
+			delete vars.encounteredMon;
+			this.removeChat(roomid);
+			//alerty("hey mr user, this room expired.");
 		}
 		return;
 	} else if ((data+'|').substr(0,8) === '|deinit|' || (data+'|').substr(0,8) === '|noinit|') {
@@ -1061,20 +1154,7 @@ vars.receive = function(data) {
 			parts.splice(0, 1);
 			var packagedMon = parts.join('|');
 			var unpackedMon = Tools.fastUnpackTeam(packagedMon)[0];
-			function nicknamePrompt(err) {
-				var nickname = prompt((err || "") + "Enter a nickname for your new " + unpackedMon.species);
-				if (typeof nickname != "string") return;
-				if (nickname.length < 19 && nickname.length != 0) return nickname; else {
-					nicknamePrompt("ERROR: The nickname must be 1-18 characters.\n\n");
-				}
-			}
-			var nickname = nicknamePrompt();
-			if (nickname) unpackedMon.nickname = nickname;
-			unpackedMon.exp = 0;
-			unpackedMon.nextLevelExp = (Math.abs(unpackedMon.level - 5) * 50);
-			vars.team.push(unpackedMon);
-			$(".closeX, .exitButton").click();
-			vars.updateTeamOrder();
+			vars.chooseNicknameLOOP(unpackedMon);
 			break;
 		case 'e':
 		case 'end':
@@ -1153,7 +1233,7 @@ vars.receive = function(data) {
 			break;
 
 		case 'popup':
-			alert(data);
+			alerty(data);
 			//this.addPopupMessage(data.substr(7).replace(/\|\|/g, '\n'));
 			//if (this.rooms['']) this.rooms[''].resetPending();
 			break;
@@ -1164,7 +1244,7 @@ vars.receive = function(data) {
 			var fromuserid = toId(from);
 			Tools.startPM(fromuserid);
 			Tools.addPM(fromuserid, message);
-			this.rooms['lobby'].addChat(from, message, parts[2]);
+			//this.rooms['lobby'].addChat(from, message, parts[2]);
 			break;
 
 		case 'roomerror':
@@ -1509,4 +1589,27 @@ Tools.packTeam = function (team) {
 		}
 	}
 	return buf;
+};
+Tools.dragPM = false;
+Tools.startPM = function(to) {
+	if (!vars.username) return false;
+	if (toId(to) == toId(vars.username)) return false;
+	var pmbox = $("#pm" + to + "-" + toId(vars.username));
+	if (!pmbox.length) {
+		var from = toId(vars.username);
+		var insides = '';
+		insides += '<div id="pm' + to + '-' + from + '" class="pmbox">';
+		insides += '<div onmousedown="Tools.dragPM = \'pm' + to + "-" + from + '\';" ontouchstart="Tools.dragPM = \'pm' + to + "-" + from + '\';" class="pmheader">' + to + '<span onmousedown="$(\'#pm' + to + "-" + from + '\').hide();" class="pmexit">x</span></div>';
+		insides += '<div id="pmlogs' + to + '-' + from + '" class="pmlogs"></div>';
+		insides += '<input id="pminput' + to + '-' + from + '" class="pminput" />';
+		insides += '</div>';
+		$("body").append(insides);
+	} else pmbox.show();
+};
+Tools.addPM = function(from, message, to) {
+	var uid = toId(vars.username);
+	var logs = $('#pmlogs' + from + "-" + uid);
+	if (from == uid) logs = $("#pmlogs" + to + "-" + from);
+	logs.append('<div><font color="' + ((uid == from) ? "blue" : "red") + '"><b>' + from + ':</b></font> ' + message + '</div>');
+	logs.scrollTop(logs.prop("scrollHeight"));
 };
