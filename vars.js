@@ -40,6 +40,7 @@ vars.rates = {
 };
 vars.items = new Object();
 vars.team = new Array();
+vars.box = new Array();
 vars.expDivision = new Object();
 vars.focusedInput = false;
 vars.windowFocus = true;

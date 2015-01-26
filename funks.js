@@ -6,22 +6,26 @@ answerConfirmy = function(t, response) {
 	args.push(response);
 	vars[callback].apply(this, args);
 	delete confirmies[t];
+	closeAlerty(t);
 };
 confirmy = function(msg, callback, args) {return alerty(msg, [callback, args], "confirm");};
 prompty = function(msg, callback, args) {return alerty(msg, [callback, args], "prompt");};
+closeAlerty = function(t) {$('#baby' + t + ', #daddy' + t).remove();};
 alerty = function(msg, info, type) {
 	var t = new Date() / 1,
+		closeByClick = '',
 		addInputs = '';
 	if (type) {
 		if (type == "confirm") {
-			addInputs = '<br /><button onclick="answerConfirmy(' + t + ', true);$(\'#daddy' + t + '\').click();">YES</button><button onclick="answerConfirmy(' + t + ', false);$(\'#daddy' + t + '\').click();">NO</button>';
+			addInputs = '<br /><button onclick="answerConfirmy(' + t + ', true);">YES</button><button onclick="answerConfirmy(' + t + ', false);">NO</button>';
 		}
 		if (type == "prompt") {
-			addInputs = '<br /><input type="text" onkeypress="if (event.keyCode == 13) {answerConfirmy(' + t + ', this.value);$(\'#daddy' + t + '\').click();}" />';
+			addInputs = '<br /><input type="text" onkeypress="if (event.keyCode == 13) {answerConfirmy(' + t + ', this.value);}" />';
 		}
 	}
+	closeByClick = ((!info) ? ' onclick="closeAlerty(' + t + ');"' : '');
 	$('body').prepend('\
-	<div id="daddy' + t + '" onclick="$(\'#baby' + t + '\').remove();$(this).remove();" style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;cursor: pointer;background: white;opacity: 0.5;z-index: 9999;"></div>\
+	<div id="daddy' + t + '"' + closeByClick + ' style="' + (closeByClick ? 'cursor: pointer;' : '') + 'position: absolute;top: 0;left: 0;width: 100%;height: 100%;background: white;opacity: 0.5;z-index: 9999;"></div>\
 	<div id="baby' + t + '" style="width: 500px;height: 150px;margin-left: -250px;margin-top: -75px;position: absolute;top: 50%;left: 50%;background: white;outline: 2px solid rgb(175, 175, 171);z-index: 9999;">\
 	<div style="padding: 10px;font-size: 20px;text-align: center;">' + msg + ((info) ? addInputs : '') + '</div>\
 	</div>\
@@ -46,7 +50,7 @@ vars.init = function() {
 	
 	vars.socket = sock;
 	
-	if (!vars.team) vars.chooseStarterPrompt();
+	if (!vars.team.length) vars.chooseStarterPrompt();
 	
 	$(window).focus(function() {
 		vars.windowFocus = true;
@@ -348,7 +352,7 @@ vars.walkLoop = function() {
 			var block = vars.map[user.y];
 			if (block) block = block[user.x];
 			if (block === undefined) block = 0; //block doesnt exist, blackness
-			if ((block == 1) || vars.encounteredMon || vars.countBattles()) {
+			if ((block == 1 || user.x < 0 || user.y < 0) || vars.encounteredMon || vars.countBattles()) {
 				user.x = revert.x;
 				user.y = revert.y;
 			}
@@ -361,7 +365,26 @@ vars.walkLoop = function() {
 			if (moved) {
 				if (!vars.encounteredMon && block == 3 && userid == user.userid) vars.encounterMon();
 				if (user.userid == userid) vars.focusCamera(); else {
-					sprite[vars.animate()]({
+					var funk = vars.animate(),
+						inRange = true,
+						range = {min: {}, max: {}},
+						you = vars.players[userid],
+						showBlocks = {
+							x: $("#map").width() / vars.block.width,
+							y: $("#map").height() / vars.block.height
+						};
+					range.min.x = you.x - ((showBlocks.x / 2));
+					range.min.y = you.y - ((showBlocks.y / 2));
+					range.max.x = range.min.x + vars.block.x;
+					range.max.y = range.min.y + vars.block.y;
+					
+					if ((user.x >= range.min.x && user.x <= range.max.x) && (user.y >= range.min.y && user.y <= range.max.y)) {
+						inRange = true;
+					} else inRange = false;
+					if (inRange && funk == "animate") {
+						funk = "animate";
+					} else funk = "css";
+					sprite[funk]({
 						left: (vars.block.width * user.x) + 'px',
 						top: (vars.block.height * user.y) + 'px'
 					}, vars.fps);
@@ -576,6 +599,7 @@ vars.encounterMon = function() {
 	}
 };
 vars.updateExp = function(el, slot, funk, t) {
+	if (slot == -1) return;
 	if (!vars.team[slot] || vars.team[slot].exp === undefined) return false;
 	var width = vars.team[slot].exp / vars.team[slot].nextLevelExp * vars.totalExpWidth;
 	$(el)[funk]({"width": width + "px"}, t);
@@ -664,6 +688,7 @@ vars.checkLearnMove = function(monKey) {
 	}
 };
 vars.gainExp = function(el, slot, oppLevel) {
+	if (slot == -1) return;
 	function gainIt() {
 		var mon = vars.team[monKey];
 		if (mon.level == 100) return;
@@ -707,6 +732,7 @@ vars.gainExp = function(el, slot, oppLevel) {
 	vars.updateTeamOrder();
 };
 vars.differentMonInfo = function(who, slot, el) {
+	if (slot == -1) return;
 	if (who == "you") {
 		vars.expDivision[slot] = true;
 		vars.updateExp(el, slot, "css");
@@ -717,15 +743,27 @@ vars.differentMonInfo = function(who, slot, el) {
 };
 vars.saveGame = function() {
 	if (vars.team.length) localStorage.setItem("team", JSON.stringify(vars.team));
+	if (vars.box.length) localStorage.setItem("box", JSON.stringify(vars.box));
 	var itemsString = "";
 	for (var itemId in vars.items) itemsString += itemId + "*" + vars.items[itemId] + "|";
 	itemsString = itemsString.slice(0, -1);
 	localStorage.setItem("items", itemsString);
+	localStorage.setItem("mapName", vars.mapName);
 	$("body").append('<div id="saving" style="position: absolute;z-index: 1000;text-align: center;background: white;opacity: 0.5;top: 0;left: 0;width: 100%;height: 100%;font-size: 25px;font-weight: bold;">Saving...</div>');
 	setTimeout("jQuery('#saving').remove();", 1500);
 };
 vars.openSaveData = function() {
-	vars.team = JSON.parse(localStorage.getItem("team"));
+	function get(variableName, item, parse) {
+		if (!item) item = variableName;
+		if (localStorage.getItem(item)) {
+			var val = localStorage.getItem(item);
+			if (parse) val = JSON.parse(val);
+			vars[variableName] = val;
+		}
+	}
+	get("team", "team", true);
+	get("box", "team", true);
+	get("mapName");
 	if (localStorage.getItem("items")) {
 		var items = localStorage.getItem("items").split("|");
 		for (var i in items) {
@@ -765,7 +803,6 @@ vars.actuallyUseItem = function(itemId, doit) {
 		pokeball: function(ball) {
 			var monId = vars.encounteredMon;
 			if (!monId) return "You can't use your pokeball because you aren't playing against any wild pokemon.";
-			if (vars.team.length == 6) return "You already have 6 pokemon.";
 			var pokemon = BattlePokedex[monId];
 			//cue the throw pokeball animation
 			if (!ball) ball = "pokeball";
@@ -826,10 +863,15 @@ vars.actuallyUseItem = function(itemId, doit) {
 	}
 };
 vars.slotFromPackage = function(poke) {
+	var deleteMoves;
 	poke.item = "";
 	poke.nature = "";
 	poke.gender = "";
 	poke.species = poke.baseSpecies;
+	if (!poke.moves[0]) {
+		deleteMoves = true;
+		poke.moves = new Array();
+	}
 	var packaged = Tools.packTeam([poke]);
 	var teamClone = jQuery.extend(true, {}, vars.team);
 	for (var slot in teamClone) {
@@ -838,10 +880,12 @@ vars.slotFromPackage = function(poke) {
 		mon.nature = "";
 		mon.item = "";
 		mon.gender = "";
+		if (!poke.ability) mon.ability = "";
+		if (deleteMoves) mon.moves = new Array();
 		var packagedMon = Tools.packTeam([mon]);
 		if (packagedMon === packaged) return slot;
 	}
-	return 0;
+	return -1;
 };
 vars.updateTeamOrder = function() {
 	var insides = '';
@@ -913,7 +957,10 @@ vars.addPokemon = function(unpackedMon, nickname) {
 	if (nickname) unpackedMon.nickname = nickname;
 	unpackedMon.exp = 0;
 	unpackedMon.nextLevelExp = (Math.abs(unpackedMon.level - 5) * 50);
-	vars.team.push(unpackedMon);
+	if (vars.team.length == 6) {
+		vars.box.push(unpackedMon);
+		alerty("Your '" + (nickname || unpackedMon.species) + "' was sent to your Box.");
+	} else vars.team.push(unpackedMon);
 	$(".closeX, .exitButton").click();
 	vars.updateTeamOrder();
 };
@@ -1163,7 +1210,6 @@ vars.receive = function(data) {
 			break;
 		case 'updateuser':
 		case 'formats':
-			console.log("\n\n\n\n\n\t\t\t\t\tNUMBA1\n\n\n\n\n");
 			if (parts[1].substr(0, 6) != "Guest ") vars.send('/start ' + vars.mapName);
 			if (typeof BattleFormats == "undefined") vars.parseFormats(parts); //formats line
 			break;
