@@ -4,12 +4,14 @@ answerConfirmy = function(t, response) {
 	var callback = ray[0],
 		args = Array.prototype.slice.call(ray[1]);
 	args.push(response);
-	vars[callback].apply(this, args);
+	if (typeof callback == "string") vars[callback].apply(this, args); else {
+		callback.apply(this, args);
+	}
 	delete confirmies[t];
 	closeAlerty(t);
 };
 confirmy = function(msg, callback, args) {return alerty(msg, [callback, args], "confirm");};
-prompty = function(msg, callback, args) {return alerty(msg, [callback, args], "prompt");};
+prompty = function(msg, callback, args) {var id = alerty(msg, [callback, args], "prompt");$("#baby" + id + " input").focus();return id;};
 closeAlerty = function(t) {$('#baby' + t + ', #daddy' + t).remove();};
 alerty = function(msg, info, type) {
 	var t = new Date() / 1,
@@ -39,7 +41,7 @@ vars.init = function() {
 	vars.loadMap(vars.mapName);
 	vars.resize();
 	
-		var sock = new SockJS('http://elloworld.noip.me:8001/showdown/');
+		var sock = new SockJS('http://45.56.82.40:8000/showdown/');
 		sock.onopen = function() {console.log('open');};
 		sock.onmessage = function(event) {
 			//console.log = function() {};
@@ -78,6 +80,41 @@ vars.init = function() {
 				vars.updateTeamOrder();
 			}
 		}
+	}).on("dblclick", "#teamOrder div", function() {
+		var msg = "Would you like to send your " + (vars.team[this.id].species) + " to your box.";
+		confirmy(msg, function(id, doit) {
+			if (!doit) return;
+			if (vars.team.length == 1) return alerty("You can't move any more pokemon into your box because you can't have 0 pokemon in your party.");
+			var poke = vars.team[id];
+			vars.team.splice(id, 1);
+			vars.box.push(poke);
+			vars.updateTeamOrder();
+		}, [this.id]);
+	}).on("click", "#box div", function() {
+		var msg = "",
+			species = (vars.box[this.id].species);
+		msg = "Input the NUMBER next to the following action you'd like to do.<br />" +
+				"<div style=\"font-size: 13px;text-align: left;\">" +
+				"0 - Move " + species + " to your team.<br />" +
+				"1 - Release the " + species + "." +
+				"</div>" +
+				"Any other input will cancel.";
+		prompty(msg, function(id, val) {
+			var options = {0: "move", 1: "release"};
+			if (!val || !options[val]) return;
+			var option = options[val];
+			if (option == "move") {
+				if (vars.team.length >= 6) return alerty("You already have 6 pokemon in your team. Move some into your box by double clicking a pokemon and try again.");
+				var poke = vars.box[id];
+				vars.box.splice(id, 1);
+				vars.team.push(poke);
+				vars.updateTeamOrder();
+				vars.openBox();
+			} else if (option == "release") {
+				vars.box.splice(id, 1);
+				vars.openBox();
+			}
+		}, [this.id]);
 	}).on("click", ".nametag", function() {
 		if (vars.countBattles()) return alerty("Already in a battle.");
 		var userid = toId(this.innerHTML);
@@ -691,8 +728,7 @@ vars.gainExp = function(el, slot, oppLevel) {
 	if (slot == -1) return;
 	function gainIt() {
 		var mon = vars.team[monKey];
-		if (mon.level == 100) return;
-		mon.exp += gain;
+		if (mon.level < 100) mon.exp += gain;
 		alerty("Your " + mon.species + " gained " + gain + " exp.");
 		if (mon.exp >= mon.nextLevelExp) {
 			$(el).css({
@@ -702,7 +738,7 @@ vars.gainExp = function(el, slot, oppLevel) {
 		while (mon.exp >= mon.nextLevelExp) {
 			var oldSpecies = mon.species;
 			mon.exp = mon.exp - mon.nextLevelExp;
-			mon.nextLevelExp += 50;
+			mon.nextLevelExp += 100;
 			mon.level++;
 			if (mon.level > 100) {
 				mon.level = 100;
@@ -719,11 +755,8 @@ vars.gainExp = function(el, slot, oppLevel) {
 		}, 500);
 	}
 	var numMons = Object.keys(vars.expDivision).length,
-		gainPerLevelDifference = 100;
-	var difference = (oppLevel - (vars.team[slot].level));
-	var gain = gainPerLevelDifference * difference;
-	if (gain < gainPerLevelDifference) gain = gainPerLevelDifference;
-	if (Math.abs(difference) <= 5) gain += 50 + (50 / (Math.abs(difference) + 1));
+		gainPerLevelDifference = 25;
+	var gain = gainPerLevelDifference * oppLevel;
 	gain = gain / numMons;
 	for (var monKey in vars.expDivision) gainIt();
 	vars.expDivison = new Object();
@@ -762,7 +795,7 @@ vars.openSaveData = function() {
 		}
 	}
 	get("team", "team", true);
-	get("box", "team", true);
+	get("box", "box", true);
 	get("mapName");
 	if (localStorage.getItem("items")) {
 		var items = localStorage.getItem("items").split("|");
@@ -888,12 +921,27 @@ vars.slotFromPackage = function(poke) {
 	return -1;
 };
 vars.updateTeamOrder = function() {
+	$("#teamOrder").html(vars.updateOrder("team"));
+};
+vars.openBox = function() {
+	$("#box").remove();
 	var insides = '';
-	for (var i in vars.team) {
-		var mon = vars.team[i];
-		insides += '<div style="' + Tools.getIcon(mon.species) + '" title="' + mon.species + '" id="' + i + '"></div>';
+	insides += '<div id="box">' +
+	'<div class="exitButton" onclick="$(\'#box\').remove();">x</div>' +
+	'<h2>Box</h2>' +
+	'<div id="containmons">' + vars.updateOrder("box") + '</div>' +
+	'</div>';
+	
+	$("body").append(insides);
+};
+vars.updateOrder = function(type) {
+	function monHtml(mon, id) {
+		return '<div style="' + Tools.getIcon(mon.species) + '" title="' + mon.species + '" id="' + id + '"></div>';
 	}
-	$("#teamOrder").html(insides);
+	var insides = '';
+	for (var i in vars[type]) insides += monHtml(vars[type][i], i);
+	if (type == "team") insides += ' <span onclick="vars.openBox();">Open Box</span>';
+	return insides;
 };
 vars.startAnims = function() {
 	if (vars.startedAnims) return;
