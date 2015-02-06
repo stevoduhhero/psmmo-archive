@@ -137,12 +137,25 @@
 			}
 		};
 		vars.init = function() {
+			$("#layers").width($("body").width() - $("#sprites").width() - $("#sprites").offset().left);
+			
 			sprites = new Image();
 			sprites.src = "./sprites.png";
 			
 			vars.updateSprites();
 			vars.addLayer("Background");
 			vars.addLayer("Foreground");
+
+			var left = ($("#canvases").width() / 2) - (vars.block.width / 2);
+			var top = ($("#canvases").height() / 2) - (vars.block.height / 2);
+			$('<div />').width(14).height(19).css({
+				position: 'absolute',
+				top: top + "px",
+				left: left + "px",
+				background: 'url(http://elloworld.noip.me/psmmo/sprites.png) -481px -387px',
+				opacity: '0.8',
+				"z-index": 9000
+			}).appendTo('#canvases');
 		};
 		vars.getLayers = function() {
 			//returns layers in the order theyre set in

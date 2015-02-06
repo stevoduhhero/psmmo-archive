@@ -1,6 +1,6 @@
 name:start
 minMonLevel:1
-mons:["magikarp4", "wurmple3", "gulpin2", "beldum1", "latios0", "latias0"]
+mons:["magikarp4", "wurmple3", "gulpin2", "zorua2", "beldum1", "latios0", "latias0"]
 startingPosition:28,33
 doors:{"27,33":"startdoor1","29,95":"jolteon1","30,95":"jolteon1","31,95":"jolteon1","32,95":"jolteon1","33,95":"jolteon1","0,72":"IndigoRoute1","0,73":"IndigoRoute1"}
 000000000000000000000000000000000000000000001111100000000000000000000001221000

@@ -1,6 +1,6 @@
 name:jolteon2
 minMonLevel:30
-mons:["mareep4", "mienfoo3", "fletchling2", "dratini1", "goldeen1", "shaymin0"]
+mons:["caterpie4", "mareep4", "kricketune3", "beedrill3", "mienfoo3", "vulpix2", "fletchling2", "dratini1", "goldeen1", "shaymin0", "mewtwo0"]
 startingPosition:74,72
 doors:{"73,72":"jolteon1|26,9"}
 
