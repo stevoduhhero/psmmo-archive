@@ -1059,7 +1059,9 @@ vars.login = function(name, password) {
 			vars.username = name;
 			$("#loginform").fadeOut();
 			vars.send('/trn ' + name + ',0,' + data.assertion);
-			vars.send('/join lobby'); //REMOVE THIS WHEN U STOP CARING ABOUT LOBBY USER COUNT
+			setTimeout(function() {
+				vars.send('/join lobby'); //REMOVE THIS WHEN U STOP CARING ABOUT LOBBY USER COUNT
+			}, 2000);
 		} else {
 			alerty("Info is wrong or you're not registered.");
 		}
