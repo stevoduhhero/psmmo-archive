@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PSmmo</title>
+		<meta name="viewport" content="width=device-width, initial-scale=0.7, maximum-scale=0.7, user-scalable=0"/>
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/client.css" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/sim-types.css" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/battle.css" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/utilichart.css" />
+		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/font-awesome.css" />
+		<link rel="stylesheet" href="./css.css" />
+		<script src="//play.pokemonshowdown.com/js/lib/jquery-2.1.4.min.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery-cookie.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/autoresize.jquery.min.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery.json-2.3.min.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/soundmanager2-nodebug-jsmin.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/html-sanitizer-minified.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/lodash.core.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/backbone.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/d3.v3.min.js"></script>
+		<script src="//play.pokemonshowdown.com/config/config.js"></script>
+		<script src="//play.pokemonshowdown.com/js/battledata.js"></script>
+		<script src="//play.pokemonshowdown.com/data/pokedex-mini.js"></script>
+		<script src="//play.pokemonshowdown.com/data/typechart.js"></script>
+		<script src="./psjs/battle.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/sockjs-1.1.1-nwjsfix.min.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/color-thief.min.js"></script>
+		<script src="//play.pokemonshowdown.com/data/learnsets-g6.js"></script>
+		<script src="//play.pokemonshowdown.com/data/pokedex.js"></script>
+		<script src="//play.pokemonshowdown.com/data/formats-data.js"></script>
+		<script src="//play.pokemonshowdown.com/data/moves.js"></script>
+		<script src="//play.pokemonshowdown.com/data/items.js"></script>
+		<script>var cacheBattleItems = BattleItems;//for some reason items clear after all scripts load idk</script>
+		<script src="//play.pokemonshowdown.com/data/abilities.js"></script>
+		<script src="./psjs/Room.js"></script>
+		<script src="./psjs/client-chat.js"></script>
+		<script src="//play.pokemonshowdown.com/js/storage.js"></script>
+		<script src="//play.pokemonshowdown.com/data/graphics.js"></script>
+		<script src="//play.pokemonshowdown.com/data/aliases.js" async="async"></script>
+		<script src="./psjs/client-battle.js"></script>
+		<script src="./psjs/client-battle-tooltips.js"></script>
+		<script src="./vars.js"></script>
+		<script src="./funks.js"></script>
+		<style id="battleZoom">.ps-room-opaque {}</style>
+		<script>
+			$(function() {
+				if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
+				$('#aud').css('opacity', opacity);
+				vars.init();
+				
+				BattleItems = cacheBattleItems;
+				
+				//invisitype animation
+				if (document.getElementById("invisitype")) {
+					invisitypePlaceholderAnimation = setInterval(function() {
+						var el = $("#invisitype");
+						var holder = el.attr("placeholder").substr(7);
+						var newholder = "Message";
+						if (holder === "...") {
+							newholder += ".";
+						} else if (holder === "..") {
+							newholder += "...";
+						} else if (holder === ".") {
+							newholder += "..";
+						}
+						el.attr("placeholder", newholder);	
+					}, 500);
+				} else invisitypePlaceholderAnimation = null;
+			})
+		</script>
+	</head>
+	<body>
+		<div id="loginform" style="position: absolute;top: 0;left: 0;margin: 80px;margin-left: 30px;border: 1px solid #b6b6b6;padding: 5px;background: white;z-index: 1;">
+			USERNAME: <input type="text" id="username" onkeypress="if (event.keyCode == 13) $('#password').focus();"><br>
+			PASSWORD: <input type="password" id="password" onkeypress="if (event.keyCode == 13) $('#loginbutton').click();"><br>
+			<button id="loginbutton" onclick="vars.login($('#username').val(), $('#password').val());">LOGIN (use showdown credentials)</button>
+			<script>$(function() {$("#username").focus();})</script>
+		</div>
+		<div id="map">
+			<div id="container">
+				<div id="players"></div>
+			</div>
+		</div>
+		<div id="rightPanel">
+			&nbsp;<img id="aud" src="./stolenaudio.png" height="18" style="cursor: pointer;" onclick="var mode = (!Tools.prefs('mute'));Tools.prefs('mute', mode, true);if (mode) {$(this).css('opacity', '0.5');} else {$(this).css('opacity', 1);}" />&nbsp;
+			<button onclick="vars.saveGame();">Save Game</button><button onclick="vars.openBag();">Open Bag</button>
+			<div id="teamOrder"></div>
+			<input type="text" id="invisitype" placeholder="Message..." />
+			<hr />
+			<div ontouchmove="event.preventDefault();" id="joystick" style="height: 150px;position: relative;width: 100%;">
+				<div style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 150px;height: 150px;margin-top: -75px;margin-left: -75px;background: #b6b6b6;box-shadow: 0 0 0 5px #b1b1b1;"></div>
+				<div style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 75px;height: 75px;margin-top: -37.5px;margin-left: -37.5px;background: #b1b1b1;box-shadow: 0px 0px 10px 5px rgb(153, 152, 152);"></div>
+				<div id="centro" style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 75px;height: 75px;margin-top: -37.5px;margin-left: -37.5px;background: rgb(199, 199, 199);box-shadow: 0px 0px 0px 1px rgb(153, 152, 152);font-size: 12px;text-align: center;line-height: 64px;color: white;text-shadow: black 1px 1px 1px;cursor: pointer;">JOYSTICK</div>
+			</div>
+			<hr />
+			<ul>
+				<h2><a href="http://45.56.82.40/viewforum.php?f=9" target="_BLANK">Forums for PSmmo</a></h2>
+				<h3>How to play</h3>
+				<li>Arrows/Joystick for moving around</li>
+				<li>Type anywhere to send a message</li>
+				<li>Click on other player names to send them a challenge</li>
+				<li>Click on two different pokemon icons to switch team order</li>
+				<li>Double click on a pokemon icon to send a pokemon to your box</li>
+				<li>Get more pokeballs: tba</li>
+				</li>
+			</ul>
+		</div>
+		<div id="bag">
+			<div class="relative">
+				<a class="closeX" onclick="$('#bag').hide();" style="right: -25px;top: -8px;">&#10006;</a>
+				<div id="bagItems"></div>
+				<div id="itemDesc"></div>
+				<div id="itemIcon"></div>
+			</div>
+		</div>
+		<div class="challenges"></div>
+</html>

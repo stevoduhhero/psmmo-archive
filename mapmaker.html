@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Map Maker</title>
+		<style>
+			body, html {
+				padding: 0;
+				margin: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				   -moz-user-select: -moz-none;
+				   -khtml-user-select: none;
+				   -webkit-user-select: none;
+				   -ms-user-select: none;
+				   user-select: none;
+			}
+			#map {
+				position: absolute;
+			}
+			#map hr {
+				padding: 0;
+				margin: 0;
+				float: left;
+				display: block;
+				border: none;
+				opacity: 0;
+			}
+			#grid {
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				z-index: 1;
+			}
+			#tools {
+				position: absolute;
+				z-index: 2;
+				top: 5px;
+				right: 5px;
+				border: 1px solid black;
+				border-radius: 20px;
+				background: rgba(200, 200, 200, 0.9);
+				padding: 10px;
+			}
+			.blockwalk, .grass, .water, .door {
+				opacity: 1 !important;
+			}
+			.blockwalk {
+				background: rgba(255, 0, 0, 0.5);
+			}
+			.grass {
+				background: rgba(0, 255, 0, 0.5);
+			}
+			.water {
+				background: rgba(0, 0, 255, 0.5);
+			}
+			.door {
+				background: rgba(0, 0, 0, 0.5);
+				cursor: pointer;
+			}
+			select, button {
+				padding: 5px;
+			}
+			textarea {
+				width: 80%;
+				height: 500px;
+			}
+		</style>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="./vars.js"></script>
+		<script src="./funks.js"></script>
+		<script>
+			vars.tool = "fill";
+			vars.fillType = "blockwalk";
+			vars.loadMap = function(src) {
+				var img = new Image();
+				var self = img;
+				img.src = src;
+				img.onload = function() {
+					$("#map img").remove();
+					$("#map").width(self.width).height(self.height);
+					$("#container").append(self);
+					var blocks = {
+						x: Math.floor(self.width / vars.block.width),
+						y: Math.floor(self.height / vars.block.height)
+					};
+					var insides = '';
+					for (var i = 0; i < blocks.x * blocks.y; i++) insides += '<hr>';
+					$("#grid").empty().html(insides);
+					vars.map = new Array();
+				};
+			};
+			vars.init = function() {
+				$('body').append('\
+				<style>\
+				hr {width: ' + vars.block.width + 'px;height: ' + vars.block.height + 'px;}\
+				</style>\
+				');
+				vars.loadMap('./maps/start.png');
+			};
+			vars.fillBlock = function(x, y, fill) {
+				var blocksInRow = Math.floor($("#map").width() / vars.block.width);
+				$($("hr")[(y * blocksInRow) + x]).attr("class", fill);
+				if (!vars.map[y]) vars.map[y] = new Array();
+				vars.map[y][x] = fill;
+				console.log('"' + y + ',' + x + '":"mapname",');
+			};
+			vars.toString = function(map) {
+				var insides = '';
+				insides += 'name:UNTITLED\n';
+				insides += 'minMonLevel:1\n';
+				insides += 'mons:["ralts4", "metapod3", "bagon2", "pinsir1", "mew0"]\n';
+				insides += 'startingPosition:0,0\n';
+				insides += 'doors:{}\n';
+				//doors:[[x, y, link], [x, y, link]]\n
+				for (var y = 0; y < map.length; y++) {
+					var row = map[y];
+					if (!row) row = ""; //.length will return 0
+					for (var x = 0; x < row.length; x++) {
+						var val = row[x];
+						if (!val) val = 0;
+						if (vars.blockTypes[val] !== undefined) val = vars.blockTypes[val];
+						insides += val;
+					}
+					insides += '\n';
+				}
+				return insides;
+			};
+			vars.exportMap = function() {
+				var insides = '',
+					id = new Date() / 1;
+				insides += '<div id="daddy' + id + '" style="position: absolute;z-index: 1000;background: rgba(255, 255, 255, 0.5);width: 100%;height: 100%;top: 0;left: 0;">';
+					insides += '<button onclick="$(\'#daddy' + id + '\').remove();" style="width: 100%;height: 100px;">CLOSE</button><br />';
+					insides += '<center><textarea onclick="this.select();">' + vars.toString(vars.map) + '</textarea></center>';
+				insides += '</div>';
+				$('body').append(insides);
+			};
+			vars.importMap = function(data) {
+				var data = data.split('\n');
+				var name = data[0].split(':')[1],
+					minMonLevel = Math.floor(data[1].split(':')[1]),
+					mons = JSON.parse(data[2].split(':')[1]),
+					startingPosition = data[3].split(':')[1].split(',');
+				var doorsJSON = data[4].split(':');
+				doorsJSON.splice(0, 1);
+				var doors = JSON.parse(doorsJSON.join(':'));
+				data.splice(0, 5);
+				
+				vars.mapName = name;
+				vars.minMonLevel = minMonLevel;
+				vars.mons = mons;
+				vars.startingPosition = startingPosition;
+				vars.doors = doors;
+				
+				vars.map = new Array();
+				var blockTypes = Object.keys(vars.blockTypes),
+					blocksInRow = Math.floor($("#map").width() / vars.block.width);
+				for (var y in data) {
+					var row = data[y].split(''),
+						r = new Array();
+					for (var x in row) {
+						var blockType = blockTypes[Math.floor(row[x])];
+						r.push(blockType);
+						$($("hr")[(y * blocksInRow) + Math.floor(x)]).attr("class", blockType);
+					}
+					vars.map.push(r);
+				}
+			};
+			$(function() {
+				vars.init();
+				$("#map").mousedown(function(e) {
+					vars.dragMap = {
+						e: e,
+						x: vars.x,
+						y: vars.y,
+						tool: vars.tool
+					};
+					if (vars.tool == "fill") vars.fillBlock(Math.floor(e.pageX / vars.block.width) - vars.dragMap.x, Math.floor(e.pageY / vars.block.height) - vars.dragMap.y, vars.fillType);
+					e.preventDefault();
+					return false;
+				});
+				$(document).mousemove(function(e) {
+					if (vars.dragMap) {
+						if (vars.dragMap.tool == "drag") {
+							var x = Math.floor((e.pageX - vars.dragMap.e.pageX) / vars.block.width) + vars.dragMap.x,
+								y = Math.floor((e.pageY - vars.dragMap.e.pageY) / vars.block.height) + vars.dragMap.y;
+							vars.x = x;
+							vars.y = y;
+							$("#map").css({
+								left: (x * vars.block.width) + "px",
+								top: (y * vars.block.height) + "px"
+							});
+						}
+						if (vars.dragMap.tool == "fill") {
+							if (vars.tool == "fill") vars.fillBlock(Math.floor(e.pageX / vars.block.width) - vars.dragMap.x, Math.floor(e.pageY / vars.block.height) - vars.dragMap.y, vars.fillType);
+						}
+					}
+					
+				}).mouseup(function(e) {
+					delete vars.dragMap;
+				});
+			})
+		</script>
+	</head>
+	<body>
+		<div id="tools">
+			<label>Tool: <select onchange="vars.tool = this.value.toLowerCase();"><option>Fill</option><option>Drag</option></select></label><br /><br />
+			<label>Type: <select onchange="vars.fillType = this.value.toLowerCase().split(' ').join('');"><option>Block Walk</option><option>Grass</option><option>Water</option><option>Blank</option><option>Door</option></select></label>
+			<center>
+				<br />
+				<button onclick="var url = prompt('PASTE URL');if (url) {vars.loadMap(url);}">Change Map Url</button><br />
+				<button onclick="vars.exportMap();">Export</button> <button onclick="alerty('Paste exported map & hit [Enter]: ', [vars.importMap, []], 'multiline');">Import</button>
+			</center>
+		</div>
+		<div id="map">
+			<div id="container" style="position: relative;width: 100%;height: 100%;">
+				<div id="grid"></div>
+			</div>
+		</div>
+	</body>
+</html>

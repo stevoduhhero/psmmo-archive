@@ -1,0 +1,318 @@
+body, html {
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	color: black !important;
+	font-family: initial !important;
+	font-size: initial !important;
+	background: none;
+}
+#map {
+	position: relative;
+	overflow: hidden;
+	float: left;
+}
+.mapimg {
+	background-repeat: no-repeat !important;
+}
+#container {
+	background: black;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+#rightPanel {
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+#teamOrder {
+	width: 100%;
+	height: 24px;
+	margin: 5px;
+}
+#teamOrder span {
+	color: blue;
+	text-decoration: underline;
+	cursor: pointer;
+}
+#teamOrder div, #box #containmons div {
+	image-rendering: pixelated;
+	width: 40px;
+	height: 30px;
+	float: left;
+	outline: 1px solid #b6b6b6;
+	margin-right: 5px;
+	cursor: pointer;
+}
+#teamOrder .selected {
+	background-color: rgba(255, 0, 0, 0.25) !important;
+}
+.exitButton {
+	position: absolute;
+	color: red;
+	margin-left: -8px;
+	margin-top: -10px;
+	background: white;
+	padding: 3px;
+	cursor: pointer;
+	border-radius: 20px;
+	width: 15px;
+	height: 15px;
+	text-align: center;
+	line-height: 0.5;
+	z-index: 1;
+	font-weight: bold;
+	text-shadow: 0px 1px 0px black;
+}
+
+
+.exitButton:hover, a.closeX:hover {
+	box-shadow: 0px 0px 7px 1px rgb(80, 80, 80);
+}
+#players {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+}
+.player {
+	position: absolute;
+	z-index: 3;
+	margin-top: -3px;
+}
+a.closeX {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 20px;
+	background-color: #FFF;
+	color: red;
+	margin-top: 3px;
+	margin-right: 20px;
+	border-radius: 20px;
+	padding-left: 3px;
+	padding-top: 1px;
+	cursor: pointer;
+	z-index: 1;
+	font-size: 16px;
+	font-weight: bold;
+	box-shadow: 1px 1px 1px 0px rgb(80, 80, 80);
+}
+.nametag {
+	position: absolute;
+	top: -16px;
+	left: 0;
+	font-size: 11px;
+	width: 50px;
+	overflow: hidden;
+	margin-left: -21px;
+	font-weight: bold;
+	text-shadow: 0px 0px white;
+	background: rgba(255, 255, 255, 0.6);
+	text-align: center;
+	border-radius: 10px;
+	cursor: pointer;
+}
+.msgs {
+	display: none;
+	bottom: 36px;
+	top: auto;
+	width: 100px;
+	margin-left: -41px;
+	font-weight: normal;
+	background: rgba(255, 255, 255, 0.8);
+}
+.msgs div {
+	box-shadow: 1px 1px 1px rgb(117, 117, 117);
+}
+#invisitype {
+	padding: 0;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin: 0;
+	border: none;
+	color: grey;
+	outline: none;
+	float: left;
+	font-size: 20px;
+	width: 100%;
+	background: transparent;
+}
+.expbar {
+	height: 4px;
+	margin-top: 143px;
+	margin-left: 136px;
+	position: absolute;
+	z-index: 1;
+	width: 150px;
+	background: rgba(0, 75, 158, 0.75);
+	border-radius: 5px 5px 0px 0px;
+}
+#bag {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	background: url('./itemscontainer.png');
+	width: 547px;
+	height: 368px;
+	z-index: 4;
+	margin-left: -273.5px;
+	margin-top: -184px;
+	display: none;
+}
+#bagItems {
+	position: absolute;
+	right: 20px;
+	top: 20px;
+	width: 278px;
+	padding: 5px;
+	height: 222px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+#itemDesc {
+	position: absolute;
+	left: 80px;
+	top: 276px;
+	width: 454px;
+	height: 87px;
+	overflow: auto;
+	overflow-x: hidden;
+	font-size: 20px;
+	font-family: cursive;
+	margin-top: 5px;
+	color: white;
+	text-shadow: 0.1em 0.1em black;
+}
+#itemIcon {
+	position: absolute;
+	left: 14px;
+	top: 295px;
+	width: 50px;
+	height: 50px;
+	overflow-x: hidden;
+	text-align: center;
+}
+.itemInBag {
+	font-size: 20px;
+	font-family: monospace;
+	font-weight: bold;
+	color: rgb(75, 75, 75);
+	text-shadow: 0.05em 0.05em rgb(226, 226, 226);
+	border-bottom: 5px dashed rgb(231, 228, 130);
+	text-transform: uppercase;
+	cursor: pointer;
+}
+.itemInBag:hover {
+	color: black;
+}
+.itemNameLabel {
+	width: 204px;
+	display: inline-block;
+}
+.itemCountLabel {
+	width: 55px;
+	display: inline-block;
+	text-align: right;
+}
+.ps-room-opaque {
+	width: 900px;
+	height: 515px;
+	background: rgba(255, 255, 255, 0.5) !important;
+	position: absolute;
+	bottom: 1px !important;
+	top: auto;
+	right: 0;
+	left: auto;
+	outline: 1px solid rgb(179, 179, 179);
+	z-index: 3;
+}
+.battle-log {
+	background: rgba(255, 255, 255, 0.6);
+}
+.challenges {
+	position: absolute;
+	bottom: 3px;
+	right: 3px;
+	z-index: 12;
+	width: 323px;
+}
+.pmbox {
+	position: absolute;
+	top: 20%;
+	left: 50%;
+	margin-left: -167.5px;
+	z-index: 15;
+	background: white;
+	opacity: 0.9;
+	outline: 1px solid #b6b6b6;
+	width: 335px;
+	height: 150px;
+}
+.pmheader {
+	background: #e6e6e6;
+	cursor: pointer;
+	margin-top: -22px;
+	height: 21px;
+	border-radius: 10px 10px 0px 0px;
+	text-align: center;
+	background: rgb(106, 223, 197);
+}
+.pmexit {
+	float: right;
+	color: red;
+	font-weight: bold;
+	text-align: right;
+}
+.pmlogs {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	height: 100%;
+	background: rgb(237, 255, 251);
+}
+.pminput {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	border: none;
+	outline: none;
+	box-shadow: 0em 0em 0em 1px #b6b6b6;
+	background: rgb(199, 255, 242);
+}
+.pmbox button {
+	width: 24%;
+	margin-left: 1%;
+}
+#box {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -125px;
+	margin-top: -80px;
+	width: 240px;
+	height: 150px;
+	background: white;
+	outline: 1px solid rgb(146, 141, 141);
+	padding: 5px;
+	cursor: default;
+	z-index: 1;
+}
+#box .exitButton {
+	border: 1px solid grey;
+}
+#box h2 {
+	height: 30px;
+	text-align: center;
+	margin: 0;
+	padding: 0;
+}
+#box #containmons {
+	height: 120px;
+	overflow-y: scroll;
+}
