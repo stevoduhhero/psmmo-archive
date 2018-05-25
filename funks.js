@@ -18,14 +18,11 @@ alerty = function(msg, info, type) {
 		closeByClick = '',
 		addInputs = '';
 	if (type) {
-		if (type === "confirm") {
+		if (type == "confirm") {
 			addInputs = '<br /><button onclick="answerConfirmy(' + t + ', true);">YES</button><button onclick="answerConfirmy(' + t + ', false);">NO</button>';
 		}
-		if (type === "prompt") {
+		if (type == "prompt") {
 			addInputs = '<br /><input type="text" onkeypress="if (event.keyCode == 13) {answerConfirmy(' + t + ', this.value);}" />';
-		}
-		if (type === "multiline") {
-			addInputs = '<br /><textarea style="height: 100px;" onkeypress="if (event.keyCode == 13) {answerConfirmy(' + t + ', this.value);}"></textarea>';
 		}
 	}
 	closeByClick = ((!info) ? ' onclick="closeAlerty(' + t + ');"' : '');
@@ -44,16 +41,14 @@ vars.init = function() {
 	vars.loadMap(vars.mapName);
 	vars.resize();
 	
-	var server = 'elloworld.ddns.net';
-	if (window.location.host === "localhost") server = 'localhost';
-	var sock = new SockJS("http://" + server + ':8000/showdown/');
-	sock.onopen = function() {console.log('open');};
-	sock.onmessage = function(event) {
-		//console.log = function() {};
-		console.log('receive', JSON.stringify(event.data));
-		vars.receive(event.data);
-	};
-	sock.onclose = function() {console.log('close');};
+		var sock = new SockJS('http://45.56.82.40:8000/showdown/');
+		sock.onopen = function() {console.log('open');};
+		sock.onmessage = function(event) {
+			//console.log = function() {};
+			console.log('receive', JSON.stringify(event.data));
+			vars.receive(event.data);
+		};
+		sock.onclose = function() {console.log('close');};
 	
 	vars.socket = sock;
 	
@@ -63,8 +58,7 @@ vars.init = function() {
 		vars.windowFocus = true;
 	}).blur(function() {
 		vars.windowFocus = false;
-	}).on('resize', this.resize);
-
+	});
 	$(document).keydown(function(e) {
 		vars.key(e.keyCode);
 	}).keyup(function(e) {
@@ -73,9 +67,6 @@ vars.init = function() {
 		vars.focusedInput = this;
 	}).on("blur", "input, textarea", function() {
 		vars.focusedInput = false;
-	}).on("focus", "#invisitype", function() {
-		clearInterval(invisitypePlaceholderAnimation);
-		$("#invisitype").attr("placeholder", "");
 	}).on("click", "#teamOrder div", function() {
 		if (this.id == $("#teamOrder .selected").attr("id")) {
 			$(this).removeClass("selected");
@@ -101,8 +92,7 @@ vars.init = function() {
 		}, [this.id]);
 	}).on("click", "#box div", function() {
 		var msg = "",
-			species = vars.box[this.id];
-		if (species) species = species.species; else return;
+			species = (vars.box[this.id].species);
 		msg = "Input the NUMBER next to the following action you'd like to do.<br />" +
 				"<div style=\"font-size: 13px;text-align: left;\">" +
 				"0 - Move " + species + " to your team.<br />" +
@@ -299,25 +289,11 @@ vars.chooseStarter = function(monId) {
 	vars.updateTeamOrder();
 };
 vars.resize = function() {
-	var body = $("body");
-	
-	//hackish resizing stuff
-	vars.rightPanel = {width: 200};
-	vars.battleCSS = {height: 515};
-	//if battles bigger than screen, shrink battles
-	if (vars.battleCSS.height > body.height()) {
-		var battleZoom = (body.height() - vars.battleCSS.height) / vars.battleCSS.height * 100;
-		$("#battleZoom").html(".ps-room-opaque {zoom: " + (97 + battleZoom) + "%;-moz-transform: scale(" + ((100 + battleZoom) / 100) + ");-moz-transform-origin: 0 0;}");
-	}
-	
 	$("#map").width(vars.block.x * vars.block.width).height(vars.block.y * vars.block.height);
-	var canvas = $("#map");
-	var spaceAvailableY = body.height() - canvas.height();
-	var spaceAvailableX = body.width() - canvas.width() - vars.rightPanel.width;
-	var percentZoomY = spaceAvailableY / canvas.height() * 100;
-	var percentZoomX = spaceAvailableX / canvas.width() * 100;
-	var percentZoom = percentZoomY;
-	if (percentZoomX < percentZoom) percentZoom = percentZoomX;
+	var canvas = $("#map"),
+			body = $("body");
+	var spaceAvailable = body.height() - canvas.height();
+	var percentZoom = spaceAvailable / canvas.height() * 100;
 	canvas.css({
 		"zoom": 100 + percentZoom + "%",
 		//make it work on firefox
@@ -333,7 +309,6 @@ vars.key = function(key, keyup) {
 	var keys = {37: "left", 38: "up", 39: "right", 40: "down"};
 	var dir = keys[key] || key,
 		user = vars.players[toId(vars.username)];
-	if (!user) return;
 	if (!keys[key]) {
 		//not an arrow key
 		var el = $("#invisitype");
@@ -457,13 +432,12 @@ vars.walkLoop = function() {
 	endLoop();
 };
 vars.updatePlayer = function(player) {
-	var name = player[0],
-		x = Math.floor(player[1]),
-		y = Math.floor(player[2]);
+	var name = player[2],
+		x = Math.floor(player[0]),
+		y = Math.floor(player[1]);
 	if (x == -1 && y == -1) return; //this means its supposed to be at the starting position
 	var uid = toId(name);
 	var user = vars.players[uid];
-	if (!user) return;
 	user.x = x;
 	user.y = y;
 	$("#p" + uid)[vars.animate()]({
@@ -537,8 +511,7 @@ vars.focusCamera = function() {
 	};
 	left = (tar.x * vars.block.width) - ((showBlocks.x / 2) * vars.block.width);
 	top = (tar.y * vars.block.height) - ((showBlocks.y / 2) * vars.block.height);
-	var mozillaAnimation = false; //detect browser somehow... $.browser was deprecated!!
-	if (mozillaAnimation) {
+	if ($.browser.mozilla) {
 		$("#container .mapimg").css({
 			'background-position': (-left) + "px " + (-top) + "px",
 		});
@@ -668,46 +641,6 @@ vars.updateExp = function(el, slot, funk, t) {
 	var width = vars.team[slot].exp / vars.team[slot].nextLevelExp * vars.totalExpWidth;
 	$(el)[funk]({"width": width + "px"}, t);
 };
-vars.gainExp = function(el, slot, oppLevel) {
-	if (slot == -1) return;
-	function gainIt() {
-		var mon = vars.team[monKey];
-		if (mon.level < 100) mon.exp += gain;
-		alerty("Your " + mon.species + " gained " + gain + " exp.");
-		if (mon.exp >= mon.nextLevelExp) {
-			$(el).css({
-				width: '0%'
-			});
-		}
-		while (mon.exp >= mon.nextLevelExp) {
-			var oldSpecies = mon.species;
-			mon.exp = mon.exp - mon.nextLevelExp;
-			mon.nextLevelExp += 100;
-			mon.level++;
-			if (mon.level > 100) {
-				mon.level = 100;
-				mon.exp = 0;
-				delete mon.nextLevelExp;
-			}
-			alerty("Your " + mon.species + " just leveled up to level " + mon.level + ".");
-			vars.checkLearnMove(monKey);
-			vars.checkEvolve(monKey);
-			if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
-			$(el).animate({
-				width: '0%'
-			}, 500);
-		}
-	}
-	var numMons = Object.keys(vars.expDivision).length,
-		gainPerLevelDifference = 25;
-	var gain = gainPerLevelDifference * oppLevel;
-	gain = gain / numMons;
-	for (var monKey in vars.expDivision) gainIt();
-	vars.expDivison = new Object();
-	vars.encounteredMon = false;
-	
-	vars.updateTeamOrder();
-};
 vars.checkEvolve = function(monKey) {
 	var mon = vars.team[monKey];
 	var pokemon = BattlePokedex[toId(mon.species)];
@@ -790,6 +723,46 @@ vars.checkLearnMove = function(monKey) {
 			}
 		}
 	}
+};
+vars.gainExp = function(el, slot, oppLevel) {
+	if (slot == -1) return;
+	function gainIt() {
+		var mon = vars.team[monKey];
+		if (mon.level < 100) mon.exp += gain;
+		alerty("Your " + mon.species + " gained " + gain + " exp.");
+		if (mon.exp >= mon.nextLevelExp) {
+			$(el).css({
+				width: '0%'
+			});
+		}
+		while (mon.exp >= mon.nextLevelExp) {
+			var oldSpecies = mon.species;
+			mon.exp = mon.exp - mon.nextLevelExp;
+			mon.nextLevelExp += 100;
+			mon.level++;
+			if (mon.level > 100) {
+				mon.level = 100;
+				mon.exp = 0;
+				delete mon.nextLevelExp;
+			}
+			alerty("Your " + mon.species + " just leveled up to level " + mon.level + ".");
+			vars.checkLearnMove(monKey);
+			vars.checkEvolve(monKey);
+			if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
+		}
+		$(el).animate({
+			width: '0%'
+		}, 500);
+	}
+	var numMons = Object.keys(vars.expDivision).length,
+		gainPerLevelDifference = 25;
+	var gain = gainPerLevelDifference * oppLevel;
+	gain = gain / numMons;
+	for (var monKey in vars.expDivision) gainIt();
+	vars.expDivison = new Object();
+	vars.encounteredMon = false;
+	
+	vars.updateTeamOrder();
 };
 vars.differentMonInfo = function(who, slot, el) {
 	if (slot == -1) return;
@@ -923,7 +896,6 @@ vars.actuallyUseItem = function(itemId, doit) {
 	}
 };
 vars.slotFromPackage = function(poke) {
-	if (poke === null) return -1;
 	var deleteMoves;
 	poke.item = "";
 	poke.nature = "";
@@ -964,7 +936,7 @@ vars.openBox = function() {
 };
 vars.updateOrder = function(type) {
 	function monHtml(mon, id) {
-		return '<div style="' + Tools.getPokemonIcon(mon.species) + '" title="' + mon.species + '" id="' + id + '"></div>';
+		return '<div style="' + Tools.getIcon(mon.species) + '" title="' + mon.species + '" id="' + id + '"></div>';
 	}
 	var insides = '';
 	for (var i in vars[type]) insides += monHtml(vars[type][i], i);
@@ -1096,7 +1068,7 @@ vars.login = function(name, password) {
 	}, 'text');
 };
 vars.acceptChallenge = function(username, tier) {
-	if (BattleFormats[tier] && BattleFormats[tier].team == "preset") {
+	if (BattleFormats[tier].team == "preset") {
 		//random you don't need a team
 		vars.send('/accept ' + username);
 		return false;
@@ -1169,7 +1141,6 @@ vars.receive = function(data) {
 			//this.joinRoom(roomid, roomType, true);
 		}
 		*/
-		if (roomid === 'lobby') vars.send('/start ' + vars.mapName);
 	} else if ((data+'|').substr(0,8) === '|expire|') {
 		var room = this.rooms[roomid];
 		if (room) {
@@ -1249,7 +1220,7 @@ vars.receive = function(data) {
 			for (var i in players) {
 				var player = players[i].split('[');
 				if (!player[2]) continue;
-				vars.newPlayer(player[0]);
+				vars.newPlayer(player[2]);
 				vars.updatePlayer(player);
 			}
 			break;
@@ -1266,7 +1237,7 @@ vars.receive = function(data) {
 			parts.splice(0, 1);
 			var user = vars.players[parts[0]];
 			user.walking = false;
-			vars.updatePlayer([parts[0], parts[1], parts[2]]);
+			vars.updatePlayer([parts[1], parts[2], parts[0]]);
 			break;
 		case 'b':
 		case 'broadcastChatMessage':
@@ -1289,7 +1260,7 @@ vars.receive = function(data) {
 			break;
 		case 'updateuser':
 		case 'formats':
-			//if (parts[1].substr(0, 6) != "Guest ") vars.send('/start ' + vars.mapName);
+			if (parts[1].substr(0, 6) != "Guest ") vars.send('/start ' + vars.mapName);
 			if (typeof BattleFormats == "undefined") vars.parseFormats(parts); //formats line
 			break;
 		
@@ -1323,7 +1294,7 @@ vars.receive = function(data) {
 					icons = "";
 					for (var i in vars.team) {
 						var info = exports.BattlePokedex[toId(vars.team[i].species)];
-						icons += '<span class="col iconcol" style="width: 32px;height: 24px;display: inline-block;' + Tools.getPokemonIcon(info) + '"></span>';
+						icons += '<span class="col iconcol" style="width: 32px;height: 24px;display: inline-block;' + Tools.getIcon(info) + '"></span>';
 					}
 				}
 				if (froms[from].split('random').length - 1 > 0) icons = '';
@@ -1532,7 +1503,6 @@ function chance(percent) {
 	if (random > percent) return false;
 	return true;
 }
-if (typeof Tools === "undefined") Tools = {};
 Tools.fastUnpackTeam = function (buf) {
 	if (!buf) return null;
 

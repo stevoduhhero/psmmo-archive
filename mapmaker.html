@@ -209,7 +209,7 @@
 			<center>
 				<br />
 				<button onclick="var url = prompt('PASTE URL');if (url) {vars.loadMap(url);}">Change Map Url</button><br />
-				<button onclick="vars.exportMap();">Export</button> <button onclick="alerty('Paste exported map & hit [Enter]: ', [vars.importMap, []], 'multiline');">Import</button>
+				<button onclick="vars.exportMap();">Export</button> <button onclick="var txt = prompt('Paste your exported map...');vars.importMap(txt);">Import</button>
 			</center>
 		</div>
 		<div id="map">
