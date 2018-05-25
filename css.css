@@ -27,6 +27,9 @@ body, html {
 	position: absolute;
 	right: 0;
 	top: 0;
+	height: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 #teamOrder {
 	width: 100%;
@@ -39,8 +42,9 @@ body, html {
 	cursor: pointer;
 }
 #teamOrder div, #box #containmons div {
-	width: 32px;
-	height: 24px;
+	image-rendering: pixelated;
+	width: 40px;
+	height: 30px;
 	float: left;
 	outline: 1px solid #b6b6b6;
 	margin-right: 5px;
@@ -53,7 +57,7 @@ body, html {
 	position: absolute;
 	color: red;
 	margin-left: -8px;
-	margin-top: -6px;
+	margin-top: -10px;
 	background: white;
 	padding: 3px;
 	cursor: pointer;
@@ -61,13 +65,15 @@ body, html {
 	width: 15px;
 	height: 15px;
 	text-align: center;
-	line-height: 0.75;
+	line-height: 0.5;
 	z-index: 1;
 	font-weight: bold;
-	text-shadow: 1px 1px 0px black;
+	text-shadow: 0px 1px 0px black;
 }
+
+
 .exitButton:hover, a.closeX:hover {
-	box-shadow: 1px 1px 1px 1px rgb(80, 80, 80);
+	box-shadow: 0px 0px 7px 1px rgb(80, 80, 80);
 }
 #players {
 	position: absolute;
@@ -140,7 +146,7 @@ a.closeX {
 }
 .expbar {
 	height: 4px;
-	margin-top: 160px;
+	margin-top: 143px;
 	margin-left: 136px;
 	position: absolute;
 	z-index: 1;
@@ -220,15 +226,15 @@ a.closeX {
 	height: 515px;
 	background: rgba(255, 255, 255, 0.5) !important;
 	position: absolute;
-	bottom: 0;
+	bottom: 1px !important;
 	top: auto;
 	right: 0;
 	left: auto;
 	outline: 1px solid rgb(179, 179, 179);
-	z-index: 1;
+	z-index: 3;
 }
 .battle-log {
-	background: transparent;
+	background: rgba(255, 255, 255, 0.6);
 }
 .challenges {
 	position: absolute;
@@ -295,9 +301,10 @@ a.closeX {
 	outline: 1px solid rgb(146, 141, 141);
 	padding: 5px;
 	cursor: default;
+	z-index: 1;
 }
 #box .exitButton {
-	box-shadow: 0px 0px 1px grey;
+	border: 1px solid grey;
 }
 #box h2 {
 	height: 30px;
