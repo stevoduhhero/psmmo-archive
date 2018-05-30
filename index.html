@@ -9,53 +9,61 @@
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/utilichart.css" />
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/font-awesome.css" />
 		<link rel="stylesheet" href="./css.css" />
-		<script src="//play.pokemonshowdown.com/js/lib/jquery-2.1.4.min.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/jquery-cookie.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/autoresize.jquery.min.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/jquery.json-2.3.min.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/soundmanager2-nodebug-jsmin.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/html-sanitizer-minified.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/lodash.core.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/backbone.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/d3.v3.min.js"></script>
-		<script src="//play.pokemonshowdown.com/config/config.js"></script>
-		<script src="//play.pokemonshowdown.com/js/battledata.js"></script>
-		<script src="//play.pokemonshowdown.com/data/pokedex-mini.js"></script>
-		<script src="//play.pokemonshowdown.com/data/typechart.js"></script>
-		<script src="./psjs/battle.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/sockjs-1.1.1-nwjsfix.min.js"></script>
-		<script src="//play.pokemonshowdown.com/js/lib/color-thief.min.js"></script>
-		<script src="//play.pokemonshowdown.com/data/learnsets-g6.js"></script>
-		<script src="//play.pokemonshowdown.com/data/pokedex.js"></script>
-		<script src="//play.pokemonshowdown.com/data/formats-data.js"></script>
-		<script src="//play.pokemonshowdown.com/data/moves.js"></script>
-		<script src="//play.pokemonshowdown.com/data/items.js"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery-2.1.4.min.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery-cookie.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/autoresize.jquery.min.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/jquery.json-2.3.min.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/soundmanager2-nodebug-jsmin.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/html-sanitizer-minified.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/lodash.core.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/backbone.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/d3.v3.min.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/config/config.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/battledata.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/pokedex-mini.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/typechart.js?r=1"></script>
+		<script src="./psjs/battle.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/sockjs-1.1.1-nwjsfix.min.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/lib/color-thief.min.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/learnsets-g6.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/pokedex.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/formats-data.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/moves.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/items.js?r=1"></script>
 		<script>var cacheBattleItems = BattleItems;//for some reason items clear after all scripts load idk</script>
-		<script src="//play.pokemonshowdown.com/data/abilities.js"></script>
-		<script src="./psjs/Room.js"></script>
-		<script src="./psjs/client-chat.js"></script>
-		<script src="//play.pokemonshowdown.com/js/storage.js"></script>
-		<script src="//play.pokemonshowdown.com/data/graphics.js"></script>
-		<script src="//play.pokemonshowdown.com/data/aliases.js" async="async"></script>
-		<script src="./psjs/client-battle.js"></script>
-		<script src="./psjs/client-battle-tooltips.js"></script>
-		<script src="./vars.js"></script>
-		<script src="./main.js"></script>
+		<script src="//play.pokemonshowdown.com/data/abilities.js?r=1"></script>
+		<script src="./psjs/Room.js?r=1"></script>
+		<script src="./psjs/client-chat.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/js/storage.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/graphics.js?r=1"></script>
+		<script src="//play.pokemonshowdown.com/data/aliases.js?r=1" async="async"></script>
+		<script src="./psjs/client-battle.js?r=1"></script>
+		<script src="./psjs/client-battle-tooltips.js?r=1"></script>
+		<script src="./vars.js?r=1"></script>
+		<script src="./main.js?r=1"></script>
 		<style id="battleZoom">.ps-room-opaque {}</style>
 	</head>
 	<body>
 		<script>
-			//login			
 			document.body.innerHTML += '<iframe id="loginFrame" src="https://' + toId(vars.serverName) + '.psim.us/psmmo" style="display: none;"></iframe>';
 			$(function() {
+				//login
+				var firstLoad = true;
+				$("#serverlink").attr("href", "http://" + toId(vars.serverName) + ".psim.us").html(vars.serverName);
 				$("#loginFrame").load(function() {
-					var self = this;
-					setTimeout(function() {
+					function reloadFrame(self) {
 						if ($(self).length) {
-							$(self).attr('src', 'http://google.com');
 							$(self).attr('src', 'http://' + toId(vars.serverName) + '.psim.us/psmmo');
 						}
-					}, 10000);
+					}
+					if (firstLoad) {
+						reloadFrame(this);
+						firstLoad = false;
+					} else {
+						setTimeout(function() {
+							reloadFrame(this);
+						}, 10000);
+					}
 				});
 				
 				if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
@@ -98,7 +106,7 @@
 			});
 		</script>
 		<div id="loginform" style="position: absolute;top: 0;left: 0;margin: 80px;margin-left: 30px;border: 1px solid #b6b6b6;padding: 5px;background: white;z-index: 1;">
-			<h3>Login on any <a href="http://helloworld.psim.us" target="_BLANK">Pokemon Showdown</a> server and refresh.</h3>
+			<h3>Login on <a id="serverlink" target="_BLANK">Pokemon Showdown</a> and refresh.</h3>
 			<span>Account must be registered.</span>
 			<span id="connectingAnimation" style="font-style: italic;">Connecting...</span>
 		</div>

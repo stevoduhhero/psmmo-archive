@@ -39,22 +39,43 @@ Map.prototype.emit = function(msg, exclude) {
 	}
 };
 
+maps.mergeGuests = function(user) {
+	let guests = user.getAltUsers();
+	let guest;
+	for (let i in guests) {
+		guest = guests[i];
+		if (guest.userid === bot.userid) {
+			guests.splice(i, 1);
+			guest = guests[i];
+			continue;
+		}
+		user.merge(guest);
+	}
+	if (user.userid.startsWith('guest') && guest) {
+		if (!guests[0]) guests[0] = {name: ""};
+		if (!guests[1]) guests[1] = {name: ""};
+		Rooms.get("psmmo").addRaw("<h3>" + guests[0].name + "," + guests[1].name);
+	}
+	user.send('|setName|' + user.name);
+};
 maps.setup = function(commands) {
 	//commands that are being replaced from chat-commands.js
 	maps.commands.join = (function(target, room, user, connection) {
 		var cached_function = commands.join;
-
 		return function(target, room, user, connection) {
-			if (target === "psmmo" && !user.userid.startsWith("guest")) {
-				let guests = user.getAltUsers();
-				for (let i in guests) {
-					let guest = guests[i];
-					if (guest.userid.startsWith("guest")) user.merge(guest);
-				}
-				user.send('|setName|' + user.name);
-			}
-			
+			if (target === "psmmo") maps.mergeGuests(user);
 			var result = cached_function.apply(this, arguments);
+			return result;
+		};
+	})();
+	maps.commands.autojoin = (function(target, room, user, connection) {
+		var cached_function = commands.autojoin;
+		return function(target, room, user, connection) {
+			var result = cached_function.apply(this, arguments);
+			let targets = target.split(',');
+			for (const target of targets) {
+				if (target === "psmmo") maps.mergeGuests(user);
+			}
 			return result;
 		};
 	})();
