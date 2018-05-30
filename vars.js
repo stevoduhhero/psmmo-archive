@@ -1,5 +1,12 @@
 var vars = new Object();
 vars.wildPokemonBot = "Booty-Bot";
+vars.server = "elloworld.ddns.net";
+vars.serverName = "Hello World";
+
+if (window.location.host === "localhost") {
+	vars.server = 'localhost';
+	vars.serverName = 'localhost';
+}
 vars.x = 0;
 vars.y = 0;
 vars.players = new Object();

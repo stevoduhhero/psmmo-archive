@@ -39,6 +39,29 @@ Map.prototype.emit = function(msg, exclude) {
 	}
 };
 
+maps.setup = function(commands) {
+	//commands that are being replaced from chat-commands.js
+	maps.commands.join = (function(target, room, user, connection) {
+		var cached_function = commands.join;
+
+		return function(target, room, user, connection) {
+			if (target === "psmmo" && !user.userid.startsWith("guest")) {
+				let guests = user.getAltUsers();
+				for (let i in guests) {
+					let guest = guests[i];
+					if (guest.userid.startsWith("guest")) user.merge(guest);
+				}
+				user.send('|setName|' + user.name);
+			}
+			
+			var result = cached_function.apply(this, arguments);
+			return result;
+		};
+	})();
+	
+	for (let i in maps.commands) commands[i] = maps.commands[i];
+	return maps;
+};
 maps.commands.start = function(target, room, user, connection, cmd) {
 	if (!maps[target]) maps[target] = new Map(target);
 	let map = maps[target];
@@ -106,4 +129,4 @@ maps.commands.mmo = function(target, room, user, connection, cmd) {
 	}
 };
 
-exports.maps = maps;
+exports.setup = maps.setup;

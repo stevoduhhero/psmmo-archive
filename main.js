@@ -44,9 +44,7 @@ vars.init = function() {
 	vars.loadMap(vars.mapName);
 	vars.resize();
 	
-	var server = 'elloworld.ddns.net';
-	if (window.location.host === "localhost") server = 'localhost';
-	var sock = new SockJS("http://" + server + ':8000/showdown/');
+	var sock = new SockJS("http://" + vars.server + ':8000/showdown/');
 	sock.onopen = function() {console.log('open');};
 	sock.onmessage = function(event) {
 		//console.log = function() {};
@@ -1071,30 +1069,6 @@ vars.send = function (data, room) {
 	this.socket.send(data);
 	console.log('\t\t' + data);
 };
-vars.login = function(name, password) {
-	postProxy("./proxy.php", {
-		act: 'login',
-		name: name,
-		pass: password,
-		challengekeyid: vars.challengekeyid,
-		challenge: vars.challenge
-	}, function(data) {
-		if (data.charAt(0) == "]") {
-			data = data.substr(1);
-		}
-		data = JSON.parse(data);
-		if (data.curuser.loggedin) {
-			vars.username = name;
-			$("#loginform").fadeOut();
-			vars.send('/trn ' + name + ',0,' + data.assertion);
-			setTimeout(function() {
-				vars.send('/join lobby'); //REMOVE THIS WHEN U STOP CARING ABOUT LOBBY USER COUNT
-			}, 2000);
-		} else {
-			alerty("Info is wrong or you're not registered.");
-		}
-	}, 'text');
-};
 vars.acceptChallenge = function(username, tier) {
 	if (BattleFormats[tier] && BattleFormats[tier].team == "preset") {
 		//random you don't need a team
@@ -1241,6 +1215,17 @@ vars.receive = function(data) {
 
 	switch (parts[0]) {
 		/* mmo events */
+		case 'setName':
+			vars.username = parts[1];
+			$("#loginform").fadeOut(500, function() {
+				alerty("You are now logged in.");
+			});
+			$("#loginFrame").remove();
+			clearInterval(connectingPlaceholderAnimation);
+			setTimeout(function() {
+				vars.send('/join lobby');
+			}, 2000);
+			break;
 		case 'newPlayer':
 			vars.newPlayer(parts[1]);
 			break;
@@ -1488,18 +1473,6 @@ function toId(text) {
 	if (typeof text === 'number') text = ''+text;
 	if (typeof text !== 'string') return toId(text && text.id);
 	return text.toLowerCase().replace(/[^a-z0-9]+/g, '');
-}
-function postProxy(a, b, c) {
-	var datastring = "?post=";
-	for (var i in b) {
-		datastring += escape(i) + ":" + escape(b[i]) + "|";
-	}
-	$.get(a + datastring, c);
-}
-function getProxy(ab, c) {
-	var splint = ab.split('?');
-	var datastring = splint[1].split("=").join(":").split("&").join("|");
-	$.get(splint[0] + "?post=" + datastring, c);
 }
 function toUserid(text) {
 	text = text || '';
