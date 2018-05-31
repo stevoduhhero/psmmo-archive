@@ -98,7 +98,7 @@
 				tick = 0;
 				connectingPlaceholderAnimation = setInterval(function() {
 					tick++;
-					if (tick % 3 === 0) {
+					if (tick % 6 === 0) {
 						//every 3 seconds try to login
 						vars.send('/join psmmo');
 					}
@@ -113,7 +113,7 @@
 						newholder += "..";
 					}
 					el.html(newholder);
-				}, 1000);
+				}, 500);
 			});
 		</script>
 		<div id="loginform" style="position: absolute;top: 0;left: 0;margin: 80px;margin-left: 30px;border: 1px solid #b6b6b6;padding: 5px;background: white;z-index: 1;">

@@ -90,6 +90,27 @@ maps.setup = function(commands) {
 			return result;
 		};
 	})();
+	maps.commands.hotpatch = (function(target, room, user, connection) {
+		var cached_function = commands.hotpatch;
+		return function(target, room, user, connection) {
+			if (typeof BotDir === "undefined") global.BotDir = "./bot";
+			if (typeof MMODir === "undefined") global.MMODir = "./mmo";
+			Chat.uncache(BotDir);
+			global.Bot = require(BotDir).setup(Chat.commands);
+			Chat.uncache(MMODir);
+			global.MMO = require(MMODir).setup(Chat.commands);
+			var result = cached_function.apply(this, arguments);
+			return result;
+		};
+	})();
+	maps.commands.challenge = (function(target, room, user, connection) {
+		var cached_function = commands.challenge;
+		return function(target, room, user, connection) {
+			if (target === "psmmo") target = "gen7balancedhackmons"; //mmo
+			var result = cached_function.apply(this, arguments);
+			return result;
+		};
+	})();
 	
 	for (let i in maps.commands) commands[i] = maps.commands[i];
 	return maps;

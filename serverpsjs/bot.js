@@ -1,6 +1,6 @@
 let def = true;
 if (typeof bot === "undefined") def = false;
-if (!def) bot = {};
+if (!def) bot = {commands: {}};
 
 
 bot.name = "Booty-Bot";
@@ -253,7 +253,25 @@ bot.makeDecision = function(roomid) {
 	*/
 	
 };
-
+bot.setup = function(commands) {
+	//commands that are being replaced from chat-commands.js
+	bot.commands.part = (function(target, room, user, connection) {
+		var cached_function = commands.part;
+		return function(target, room, user, connection) {
+			var result = cached_function.apply(this, arguments);
+			if (bot.battles[targetRoom.id]) {
+				if (targetRoom.battle.players && targetRoom.battle.players[user.userid]) {
+					//bot opponent left so remove battle
+					bot.removeBattle(targetRoom.id);
+				}
+			}
+			return result;
+		};
+	})();
+	
+	for (let i in bot.commands) commands[i] = bot.commands[i];
+	return this;
+};
 bot.timerCallback = function() {
 	//making an appearance
 	if (!bot.user) {
@@ -282,4 +300,4 @@ bot.initialize = function() {
 };
 bot.initialize();
 
-exports.bot = bot;
+exports.setup = bot.setup;
