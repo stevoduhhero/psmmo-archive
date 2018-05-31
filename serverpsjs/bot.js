@@ -258,6 +258,7 @@ bot.setup = function(commands) {
 	bot.commands.part = (function(target, room, user, connection) {
 		var cached_function = commands.part;
 		return function(target, room, user, connection) {
+			let targetRoom = Rooms.get(target);
 			var result = cached_function.apply(this, arguments);
 			if (bot.battles[targetRoom.id]) {
 				if (targetRoom.battle.players && targetRoom.battle.players[user.userid]) {

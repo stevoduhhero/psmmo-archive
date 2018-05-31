@@ -26,5 +26,5 @@ Changes to Pokemon Showdown:
 
 Bot
 -----
-1. Change its name on client @ vars.js - vars.wildPokemonBot
-2. Change its name on server @ bot.js - bot.name
+- Change its name on client @ vars.js - vars.wildPokemonBot
+- Change its name on server @ bot.js - bot.name

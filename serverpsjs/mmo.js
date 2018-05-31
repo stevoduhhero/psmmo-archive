@@ -43,6 +43,7 @@ Map.prototype.emit = function(msg, exclude) {
 
 maps.mergeGuests = function(user) {
 	user = Users.get(user.userid);
+	user.setNamed = false;
 	let u, nonGuests = user.getAltUsers(true), allAlts = user.getAltUsers(true);
 	let name = user.name;
 	
@@ -67,7 +68,12 @@ maps.mergeGuests = function(user) {
 		newUser.destroy();
 		user.forceRename(name, '1', true);
 	}
-	for (let y in nonGuests) nonGuests[y].send('|setName|' + name);
+	for (let y in nonGuests) {
+		u = nonGuests[y];
+		if (u.setNamed) continue;
+		u.send('|setName|' + name);
+		u.setNamed = true;
+	}
 };
 maps.setup = function(commands) {
 	//commands that are being replaced from chat-commands.js
@@ -106,7 +112,7 @@ maps.setup = function(commands) {
 	maps.commands.challenge = (function(target, room, user, connection) {
 		var cached_function = commands.challenge;
 		return function(target, room, user, connection) {
-			if (target === "psmmo") target = "gen7balancedhackmons"; //mmo
+			if (target.split('psmmo').length - 1 > 0) target = target.replace("psmmo", "gen7balancedhackmons"); //mmo
 			var result = cached_function.apply(this, arguments);
 			return result;
 		};

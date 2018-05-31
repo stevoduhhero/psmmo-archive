@@ -1221,7 +1221,7 @@ vars.receive = function(data) {
 				alerty("You are now logged in.");
 			});
 			$("#loginFrame").remove();
-			clearInterval(connectingPlaceholderAnimation);
+			clearTimeout(connectingPlaceholderAnimation);
 			setTimeout(function() {
 				vars.send('/join lobby');
 			}, 2000);
