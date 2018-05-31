@@ -5,9 +5,10 @@ function Map(name) {
 	return this;
 }
 Map.prototype.join = function(user, connection) {
+	const userid = toId(user.name);
 	if (user.map) user.map.leave(user);
 	user.map = this;
-	this.users[user.userid] = {
+	this.users[userid] = {
 		obj: user,
 		socket: connection,
 		x: 0,
@@ -18,9 +19,10 @@ Map.prototype.join = function(user, connection) {
 	this.emit('|newPlayer|' + user.name);
 };
 Map.prototype.leave = function(user) {
+	const userid = toId(user.name);
 	delete user.map;
-	delete this.users[user.userid];
-	this.emit('e|' + user.userid);
+	delete this.users[userid];
+	this.emit('e|' + userid);
 };
 Map.prototype.players = function() {
 	let str = "";
@@ -40,23 +42,32 @@ Map.prototype.emit = function(msg, exclude) {
 };
 
 maps.mergeGuests = function(user) {
-	let guests = user.getAltUsers();
-	let guest;
-	for (let i in guests) {
-		guest = guests[i];
-		if (guest.userid === bot.userid) {
-			guests.splice(i, 1);
-			guest = guests[i];
-			continue;
+	user = Users.get(user.userid);
+	let u, nonGuests = user.getAltUsers(true), allAlts = user.getAltUsers(true);
+	let name = user.name;
+	
+	//remove bot & guests from nonGuests
+	for (let i = 0; i < nonGuests.length; i++) {
+		u = nonGuests[i];
+		if (!u) continue;
+		let uid = toId(u.name);
+		if (uid === bot.userid || uid.startsWith("guest")) {
+			nonGuests.splice(i, 1);
+			i--;
 		}
-		user.merge(guest);
 	}
-	if (user.userid.startsWith('guest') && guest) {
-		if (!guests[0]) guests[0] = {name: ""};
-		if (!guests[1]) guests[1] = {name: ""};
-		Rooms.get("psmmo").addRaw("<h3>" + guests[0].name + "," + guests[1].name);
+	
+	if (nonGuests !== null && nonGuests.length) name = nonGuests[0].name;
+	let newUser = Users.get(toId(name));
+	if (nonGuests === null || !nonGuests.length) nonGuests = [newUser];
+		
+	if (newUser.userid !== user.userid) {
+		user.merge(newUser);
+		Users.merge(user, newUser);
+		newUser.destroy();
+		user.forceRename(name, '1', true);
 	}
-	user.send('|setName|' + user.name);
+	for (let y in nonGuests) nonGuests[y].send('|setName|' + name);
 };
 maps.setup = function(commands) {
 	//commands that are being replaced from chat-commands.js
@@ -92,6 +103,7 @@ maps.commands.start = function(target, room, user, connection, cmd) {
 maps.commands.mmo = function(target, room, user, connection, cmd) {
 	/* move, stop, broadcast, catchpokemon	*/
 	if (!user.map) return;
+	let userid = toId(user.name); //forceForceRename doesn't change userid
 	let msg = target.split('.');
 	let mapObj = user.map.users[user.userid];
 	let type = toId(msg[0]);
@@ -102,12 +114,12 @@ maps.commands.mmo = function(target, room, user, connection, cmd) {
 	}
 	if (type === "start") {
 		mapObj.dir = msg[1]
-		user.map.emit('|m|' + user.userid + '|' + mapObj.dir, user);
+		user.map.emit('|m|' + userid + '|' + mapObj.dir, user);
 	}
 	if (type === "stop") {
 		mapObj.x = msg[1];
 		mapObj.y = msg[2];
-		user.map.emit('|s|' + user.userid + '|' + mapObj.x + '|' + mapObj.y, user);
+		user.map.emit('|s|' + userid + '|' + mapObj.x + '|' + mapObj.y, user);
 	}
 	if (type === "encounter") {		
 		//generate pokemon
@@ -118,7 +130,7 @@ maps.commands.mmo = function(target, room, user, connection, cmd) {
 		//update coordinates
 		mapObj.x = msg[3];
 		mapObj.y = msg[4];
-		user.map.emit('|s|' + user.userid + '|' + mapObj.x + '|' + mapObj.y, user);
+		user.map.emit('|s|' + userid + '|' + mapObj.x + '|' + mapObj.y, user);
 		
 		//createBattle
 		let formatid = "psmmo";

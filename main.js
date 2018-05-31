@@ -54,7 +54,7 @@ vars.init = function() {
 	sock.onclose = function() {console.log('close');};
 	
 	vars.socket = sock;
-	
+		
 	if (!vars.team.length) vars.chooseStarterPrompt();
 	
 	$(window).focus(function() {
