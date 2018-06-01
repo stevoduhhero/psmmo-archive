@@ -1,8 +1,19 @@
 var vars = new Object();
-vars.wildPokemonBot = "Booty-Bot";
-vars.server = "elloworld.ddns.net";
-vars.serverName = "Hello World";
 
+//server settings
+vars.wildPokemonBot = "Booty-Bot";
+vars.server = "elloworld.ddns.net"; //link to your Pokemon Showdown server / ip address [THIS IS NOT A .psim.us address]
+vars.serverName = "Hello World"; //name of your server on the PS registry [IF does not apply to your server: set equal to vars.server]
+vars.port = 8000; //default showdown port
+
+//game settings
+vars.startItems = {
+	pokeball: 10,
+	greatball: 3,
+	ultraball: 1
+};
+
+//client variables
 if (window.location.host === "localhost") {
 	vars.server = 'localhost';
 	vars.serverName = 'localhost';

@@ -44,7 +44,7 @@ vars.init = function() {
 	vars.loadMap(vars.mapName);
 	vars.resize();
 	
-	var sock = new SockJS("http://" + vars.server + ':8000/showdown/');
+	var sock = new SockJS("http://" + vars.server + ':' + vars.port + '/showdown/');
 	sock.onopen = function() {console.log('open');};
 	sock.onmessage = function(event) {
 		//console.log = function() {};
@@ -229,7 +229,7 @@ vars.chooseStarterPrompt = function() {
 		}
 		insides += '<div style="float: left;width: 50px;height: 50px;overflow: hidden;">';
 		insides += '<img style="cursor: pointer;margin-top: -20px;margin-left: -20px;"';
-		insides += ' onclick="vars.chooseStarter(\'' + starters[i] + '\');vars.items.pokeball = 5;"';
+		insides += ' onclick="vars.chooseStarter(\'' + starters[i] + '\');vars.items = vars.startItems;"';
 		insides += ' src="http://play.pokemonshowdown.com/sprites/bw/' + mon.species.toLowerCase() + '.png"';
 		insides += ' />';
 		insides += '</div>';
@@ -858,6 +858,9 @@ vars.actuallyUseItem = function(itemId, doit) {
 	if (!doit) return;
 	var item = BattleItems[itemId];
 	var items = {
+		'masterball': 'pokeball',
+		'ultraball': 'pokeball',
+		'greatball': 'pokeball',
 		pokeball: function(ball) {
 			var monId = vars.encounteredMon;
 			if (!monId) return "You can't use your pokeball because you aren't playing against any wild pokemon.";
@@ -910,10 +913,12 @@ vars.actuallyUseItem = function(itemId, doit) {
 				//break out of ball
 				alerty(pokemon.species + " broke free!");
 			}
-		},
+		}
 	};
 	if (!items[itemId]) alerty("That items functionality hasn't been implemented yet... sorry"); else {
-		var error = items[itemId]();
+		var type = itemId;
+		if (typeof items[itemId] === "string") itemId = items[itemId];
+		var error = items[itemId](type);
 		if (error) return alerty(error);
 		vars.items[itemId] -= 1;
 		if (vars.items[itemId] <= 0) delete vars.items[itemId];

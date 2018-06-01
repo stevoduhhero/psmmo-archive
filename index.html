@@ -45,7 +45,7 @@
 	</head>
 	<body>
 		<script>
-			document.body.innerHTML += '<iframe id="loginFrame" src="https://' + toId(vars.serverName) + '.psim.us" style="display: none;"></iframe>';
+			document.body.innerHTML += '<iframe id="loginFrame" src="http://' + toId(vars.serverName) + '.psim.us" style="display: none;"></iframe>';
 			$(function() {				
 				if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
 				$('#aud').css('opacity', opacity);
