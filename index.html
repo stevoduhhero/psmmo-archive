@@ -46,7 +46,7 @@
 	<body>
 		<script>
 			function serverLink() {return window.location.protocol + "//" + toId(vars.serverName) + ".psim.us";}
-			document.body.innerHTML += '<iframe id="loginFrame" src="' + serverLink + '" style="display: none;"></iframe>';
+			document.body.innerHTML += '<iframe id="loginFrame" src="' + serverLink() + '" style="display: none;"></iframe>';
 			$(function() {				
 				if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
 				$('#aud').css('opacity', opacity);
