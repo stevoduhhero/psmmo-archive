@@ -44,7 +44,7 @@ vars.init = function() {
 	vars.loadMap(vars.mapName);
 	vars.resize();
 	
-	var sock = new SockJS("http://" + vars.server + ':' + vars.port + '/showdown/');
+	var sock = new SockJS(window.location.protocol + "//" + vars.server + ':' + vars.port + '/showdown/');
 	sock.onopen = function() {console.log('open');};
 	sock.onmessage = function(event) {
 		//console.log = function() {};

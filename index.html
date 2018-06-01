@@ -45,7 +45,8 @@
 	</head>
 	<body>
 		<script>
-			document.body.innerHTML += '<iframe id="loginFrame" src="http://' + toId(vars.serverName) + '.psim.us" style="display: none;"></iframe>';
+			function serverLink() {return window.location.protocol + "//" + toId(vars.serverName) + ".psim.us";}
+			document.body.innerHTML += '<iframe id="loginFrame" src="' + serverLink + '" style="display: none;"></iframe>';
 			$(function() {				
 				if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
 				$('#aud').css('opacity', opacity);
@@ -72,12 +73,12 @@
 
 				//login
 				var firstLoad = true;
-				$("#serverlink").attr("href", "http://" + toId(vars.serverName) + ".psim.us").html(vars.serverName);
+				$("#serverlink").attr("href", serverLink()).html(vars.serverName);
 				$("#loginFrame").load(function() {
 					function reloadFrame(self) {
 						if ($(self).length) {
 							$(self).attr('src', 'http://localhost');
-							$(self).attr('src', 'http://' + toId(vars.serverName) + '.psim.us');
+							$(self).attr('src', serverLink());
 						}
 					}
 					var self = this;
