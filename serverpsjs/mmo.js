@@ -133,6 +133,7 @@ maps.commands.mmo = function(target, room, user, connection, cmd) {
 	let userid = toId(user.name); //forceForceRename doesn't change userid
 	let msg = target.split('.');
 	let mapObj = user.map.users[user.userid];
+	if (!mapObj) return;
 	let type = toId(msg[0]);
 	if (type === "msg") {
 		msg.splice(0, 1);

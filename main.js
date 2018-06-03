@@ -71,9 +71,6 @@ vars.init = function() {
 		vars.focusedInput = this;
 	}).on("blur", "input, textarea", function() {
 		vars.focusedInput = false;
-	}).on("focus", "#invisitype", function() {
-		clearInterval(invisitypePlaceholderAnimation);
-		$("#invisitype").attr("placeholder", "");
 	}).on("click", "#teamOrder div", function() {
 		if (this.id == $("#teamOrder .selected").attr("id")) {
 			$(this).removeClass("selected");
@@ -584,12 +581,20 @@ vars.loadMap = function(name) {
 			minMonLevel = Math.floor(data[1].split(':')[1]),
 			mons = JSON.parse(data[2].split(':')[1]),
 			startingPosition = data[3].split(':')[1].split(',');
+		var id = toId(name);
 		var doorsJSON = data[4].split(':');
 		doorsJSON.splice(0, 1);
 		var doors = JSON.parse(doorsJSON.join(':'));
 		vars.mapName = name;
 		vars.minMonLevel = minMonLevel;
 		vars.encounterMons = mons;
+		//add custom encounterMons
+		for (var mapId in vars.mapAdditives) {
+			var additives = vars.mapAdditives[mapId];
+			if (mapId === id) {
+				for (var i in additives) vars.encounterMons.push(additives[i]);
+			}
+		}
 		vars.doors = doors;
 		data.splice(0, 5);
 		
@@ -601,14 +606,14 @@ vars.loadMap = function(name) {
 		};
 		
 		var img = new Image();
-		img.src = './maps/' + toId(name) + '.png';
+		img.src = './maps/' + id + '.png';
 		img.onload = function() {
 			$("#players").width($(img).width()).height($(img).height());
 		};
 		$('.mapimg').remove();
 		var div = $('<div class="mapimg" />');
 		div.width($("#map").width()).height($("#map").height()).css({
-			'background': 'url("./maps/' + toId(name) + '.png") 0px 0px'
+			'background': 'url("./maps/' + id + '.png") 0px 0px'
 		}).appendTo('#container');
 		vars.map = new Array();
 		for (var y in data) {
@@ -637,7 +642,8 @@ vars.loadMap = function(name) {
 		vars.focusCamera();
 	});
 };
-vars.addMessage = function(userid, message) {
+vars.addMessage = function(name, message) {
+	var userid = toId(name);
 	var el = $('#p' + userid + ' .msgs');
 	var t = new Date() / 1;
 	el.prepend('<div id="' + userid + t + '">' + Tools.escapeHTML(message) + '</div>').show();

@@ -13,6 +13,17 @@ vars.startItems = {
 	ultraball: 1
 };
 
+//add custom pokemon to a map
+vars.mapAdditives = {
+	/*
+		rarity = 0-4, where 0 = least rare, & 4 = most rare
+		mapName: [(poke.name + poke.rarity), ...],
+		
+		ex: start: ["pikachu3", "metapod1", ...]
+	*/
+	start: ["pikachu3"]
+};
+
 //client variables
 if (window.location.host === "localhost") {
 	vars.server = 'localhost';

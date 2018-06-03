@@ -13,7 +13,8 @@ PART 1 - SETUP POKEMON SHOWDOWN
 
 Part 2 - SETUP PSMMO
 1. Download PSMMO
-2. Add to a webserver
+2. Add to a webserver OR add to /static/ folder in Pokemon-Showdown
+	- if using /static/ set the port = 80 in vars.js
 3. Change pokemon showdown server @ vars.js and change vars.server to your ip address && vars.port, if needed
 
 

@@ -55,8 +55,15 @@
 				BattleItems = cacheBattleItems;
 				
 				//invisitype animation
+				autoSaveTick = 0;
 				if (document.getElementById("invisitype")) {
 					invisitypePlaceholderAnimation = setInterval(function() {
+						autoSaveTick++;
+						if (autoSaveTick % 600 === 0) {
+							//every 5 minutes try to save
+							vars.saveGame();
+						}
+
 						var el = $("#invisitype");
 						var holder = el.attr("placeholder").substr(7);
 						var newholder = "Message";
@@ -102,7 +109,6 @@
 					if (tick % 6 === 0) {
 						//every 3 seconds try to login
 						vars.send('/join psmmo');
-						console.log("...");
 					}
 					var el = $("#connectingAnimation");
 					var holder = el.html().substr(10);
