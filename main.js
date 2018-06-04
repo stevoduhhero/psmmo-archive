@@ -874,11 +874,11 @@ vars.actuallyUseItem = function(itemId, doit) {
 		'ultraball': 'pokeball',
 		'greatball': 'pokeball',
 		pokeball: function(ball) {
+			if (!ball) ball = "pokeball";
 			var monId = vars.encounteredMon;
 			if (!monId) return "You can't use your " + ball + " because you aren't playing against any wild pokemon.";
 			var pokemon = BattlePokedex[monId];
 			//cue the throw pokeball animation
-			if (!ball) ball = "pokeball";
 			var balls = {
 				pokeball: 1,
 				greatball: 1.5,
@@ -932,8 +932,8 @@ vars.actuallyUseItem = function(itemId, doit) {
 		if (typeof items[itemId] === "string") itemId = items[itemId];
 		var error = items[itemId](type);
 		if (error) return alerty(error);
-		vars.items[itemId] -= 1;
-		if (vars.items[itemId] <= 0) delete vars.items[itemId];
+		vars.items[type] -= 1;
+		if (vars.items[type] <= 0) delete vars.items[type];
 		$("#bag").hide();
 	}
 };
