@@ -4,7 +4,7 @@ function Map(name) {
 	this.users = {};
 	return this;
 }
-Map.prototype.join = function(user, connection) {
+Map.prototype.join = function(user, connection) {	
 	const userid = toId(user.name);
 	if (user.map) user.map.leave(user);
 	user.map = this;
@@ -17,12 +17,25 @@ Map.prototype.join = function(user, connection) {
 		pokemon: {}
 	};
 	this.emit('|newPlayer|' + user.name);
+
+	//redefine user's leave function, to d/c from mmo
+	if (!user.oldLeave) user.oldLeave = user.leaveRoom;
+	user.leaveRoom = (function(room, connection = null, force = false) {
+		var cached_function = user.oldLeave;
+		return function(room, connection = null, force = false) {
+			var result = cached_function.apply(this, arguments);
+			if (room.id === "psmmo" && user.map) user.map.leave(user);
+			return result;
+		};
+	})();
 };
 Map.prototype.leave = function(user) {
 	const userid = toId(user.name);
+	if (user.map || this.users[userid]) {
+		this.emit('e|' + userid);
+	}
 	delete user.map;
 	delete this.users[userid];
-	this.emit('e|' + userid);
 };
 Map.prototype.players = function() {
 	let str = "";
@@ -61,7 +74,9 @@ maps.mergeGuests = function(user) {
 	if (nonGuests !== null && nonGuests.length) name = nonGuests[0].name;
 	let newUser = Users.get(toId(name));
 	if (nonGuests === null || !nonGuests.length) nonGuests = [newUser];
-		
+	
+	if (newUser.userid.startsWith("guest")) return;
+	
 	if (newUser.userid !== user.userid) {
 		user.merge(newUser);
 		Users.merge(user, newUser);

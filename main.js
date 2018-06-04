@@ -466,6 +466,12 @@ vars.updatePlayer = function(player) {
 		top: (vars.block.height * user.y) + 'px'
 	}, vars.fps);
 };
+vars.updateUserCount = function() {
+	$("#userCount").html("users: " + Object.keys(vars.players).length);
+};
+vars.disconnectPlayer = function(userid) {
+	$("#p" + userid).remove();
+};
 vars.newPlayer = function(name) {
 	function playerVars() {
 		return {
@@ -869,7 +875,7 @@ vars.actuallyUseItem = function(itemId, doit) {
 		'greatball': 'pokeball',
 		pokeball: function(ball) {
 			var monId = vars.encounteredMon;
-			if (!monId) return "You can't use your pokeball because you aren't playing against any wild pokemon.";
+			if (!monId) return "You can't use your " + ball + " because you aren't playing against any wild pokemon.";
 			var pokemon = BattlePokedex[monId];
 			//cue the throw pokeball animation
 			if (!ball) ball = "pokeball";
@@ -1239,8 +1245,15 @@ vars.receive = function(data) {
 			break;
 		case 'newPlayer':
 			vars.newPlayer(parts[1]);
+			vars.updateUserCount();
 			break;
+		case 'e':
+		case 'end':
+		case 'disconnectPlayer':
+			vars.disconnectPlayer(parts[1]);
+			vars.updateUserCount();
 		case 'players':
+			vars.players = new Object();
 			var players = parts[1].split(']');
 			for (var i in players) {
 				var player = players[i].split('[');
@@ -1248,6 +1261,8 @@ vars.receive = function(data) {
 				vars.newPlayer(player[0]);
 				vars.updatePlayer(player);
 			}
+			vars.updateUserCount();
+			break;
 			break;
 		case 'm':
 		case 'move':
@@ -1277,11 +1292,6 @@ vars.receive = function(data) {
 			var packagedMon = parts.join('|');
 			var unpackedMon = Tools.fastUnpackTeam(packagedMon)[0];
 			vars.chooseNicknameLOOP(unpackedMon);
-			break;
-		case 'e':
-		case 'end':
-		case 'disconnectPlayer':
-			$("#p" + parts[1]).remove();
 			break;
 		case 'updateuser':
 		case 'formats':
