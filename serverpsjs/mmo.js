@@ -91,6 +91,8 @@ maps.mergeGuests = function(user) {
 	}
 };
 maps.setup = function(commands) {
+	Dex.data.Formats.psmmo = {name: "psmmo", mod: 'gen7', ruleset: ['Pokemon'], searchShow: false};
+	
 	//commands that are being replaced from chat-commands.js
 	maps.commands.join = (function(target, room, user, connection) {
 		var cached_function = commands.join;
