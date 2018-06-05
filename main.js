@@ -961,7 +961,8 @@ vars.actuallyUseItem = function(itemId, doit) {
 				if (shakes < 4) shake();
 			}
 			shake();
-
+			
+			if (ballModifier === true) shakesStayInside = 0; //masterball
 			if (shakesStayInside == 4) {
 				//catch
 				vars.send('/mmo catchPokemon.' + monId);
