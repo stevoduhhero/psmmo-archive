@@ -40,6 +40,7 @@
 		<script src="./psjs/client-battle.js"></script>
 		<script src="./psjs/client-battle-tooltips.js"></script>
 		<script src="./vars.js"></script>
+		<script src="./helpers.js"></script>
 		<script src="./main.js"></script>
 		<style id="battleZoom">.ps-room-opaque {}</style>
 	</head>
@@ -47,85 +48,8 @@
 		<script>
 			function serverLink() {return window.location.protocol + "//" + toId(vars.serverName) + ".psim.us";}
 			document.body.innerHTML += '<iframe id="loginFrame" src="' + serverLink() + '" style="display: none;"></iframe>';
-			$(function() {				
-				if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
-				$('#aud').css('opacity', opacity);
+			$(function() {
 				vars.init();
-				
-				BattleItems = cacheBattleItems;
-				
-				//invisitype animation
-				autoSaveTick = 0;
-				if (document.getElementById("invisitype")) {
-					invisitypePlaceholderAnimation = setInterval(function() {
-						autoSaveTick++;
-						if (autoSaveTick % 600 === 0) {
-							//every 5 minutes try to save
-							vars.saveGame();
-						}
-
-						var el = $("#invisitype");
-						var holder = el.attr("placeholder").substr(7);
-						var newholder = "Message";
-						if (holder === "...") {
-							newholder += ".";
-						} else if (holder === "..") {
-							newholder += "...";
-						} else if (holder === ".") {
-							newholder += "..";
-						}
-						el.attr("placeholder", newholder);	
-					}, 500);
-				} else invisitypePlaceholderAnimation = null;
-
-				//login
-				var firstLoad = true;
-				$("#serverlink").attr("href", serverLink()).html(vars.serverName);
-				$("#loginFrame").load(function() {
-					function reloadFrame(self) {
-						if ($(self).length) {
-							$(self).attr('src', 'http://localhost');
-							$(self).attr('src', serverLink());
-						}
-					}
-					var self = this;
-					if (firstLoad) {
-						//for some reason, sometimes on the first load, the socket will not connect in the iframe
-						reloadFrame(self);
-						firstLoad = false;
-					} else {
-						/*
-						setTimeout(function() {
-							reloadFrame(self);
-						}, 10000);
-						*/
-					}
-				});
-
-				//connecting animation - login interval here
-				tick = 0;
-				function tickCallback() {
-					tick++;
-					if (tick % 6 === 0) {
-						//every 3 seconds try to login
-						vars.send('/join psmmo');
-					}
-					var el = $("#connectingAnimation");
-					var holder = el.html().substr(10);
-					var newholder = "Connecting";
-					if (holder === "...") {
-						newholder += ".";
-					} else if (holder === "..") {
-						newholder += "...";
-					} else if (holder === ".") {
-						newholder += "..";
-					}
-					el.html(newholder);
-					connectingPlaceholderAnimation = setTimeout(function() {
-						tickCallback();
-					}, 500);
-				}
-				tickCallback();
 			});
 		</script>
 		<div id="loginform" style="position: absolute;top: 0;left: 0;margin: 80px;margin-left: 30px;border: 1px solid #b6b6b6;padding: 5px;background: white;z-index: 1;">
@@ -139,7 +63,7 @@
 			</div>
 		</div>
 		<div id="rightPanel">
-			&nbsp;<img id="aud" src="./stolenaudio.png" height="18" style="cursor: pointer;" onclick="var mode = (!Tools.prefs('mute'));Tools.prefs('mute', mode, true);if (mode) {$(this).css('opacity', '0.5');} else {$(this).css('opacity', 1);}" />&nbsp;
+			&nbsp;<img id="audioStatus" src="./stolenaudio.png" height="18" style="cursor: pointer;" />&nbsp;
 			<button onclick="vars.saveGame();">Save Game</button><button onclick="vars.openBag();">Open Bag</button>
 			<div id="teamOrder"></div>
 			<input type="text" id="invisitype" placeholder="Message..." />
@@ -151,7 +75,7 @@
 			</div>
 			<hr />
 			<ul>
-				<h2><a href="http://45.56.82.40/viewforum.php?f=9" target="_BLANK">Forums for PSmmo</a></h2>
+				<h2><a href="https://psmmo.000webhostapp.com/" target="_BLANK">Forums for PSmmo</a></h2>
 				<h3>How to play</h3>
 				<li>Arrows/Joystick for moving around</li>
 				<li>Type anywhere to send a message</li>

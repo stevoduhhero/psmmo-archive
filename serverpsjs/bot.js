@@ -3,7 +3,7 @@ if (typeof bot === "undefined") def = false;
 if (!def) bot = {commands: {}};
 
 
-bot.name = "Booty-Bot";
+bot.name = "PSMMO-Bot";
 bot.userid = toId(bot.name);
 
 
@@ -14,6 +14,8 @@ bot.appear = function() {
 	bot.user = Users.get(bot.userid);
 	bot.user.registered = true;
 	bot.user.tryJoinRoom("lobby", bot.user.connections[0]);
+	bot.user.group = "*"; //botgroup
+	bot.user.updateIdentity();
 };
 bot.generateMon = function(pokemonid, minMonLevel) {
 	const poke = Dex.data.Pokedex[pokemonid];
