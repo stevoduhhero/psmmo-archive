@@ -790,6 +790,7 @@ vars.actuallyEvolve = function(monKey, evolution, doit) {
 	}
 	vars.team[monKey].species = evolution.species;
 	vars.team[monKey].ability = ability;
+	vars.updateTeamOrder();
 };
 vars.learnMove = function(move, monKey, replaceMove) {
 	var mon = vars.team[monKey];
@@ -803,44 +804,44 @@ vars.learnMove = function(move, monKey, replaceMove) {
 };
 vars.checkLearnMove = function(monKey) {
 	var mon = vars.team[monKey];
-	var learnset = BattleLearnsets[toId(mon.species)].learnset,
-		moves = new Object();
-	for (var i in mon.moves) moves[mon.moves[i]] = true;
+	var learnset = BattleLearnsets[toId(mon.species)].learnset;
+	var refuseLearn = new Object();
 	for (var i in learnset) {
 		var move = BattleMovedex[i];
 		var whenLearned = learnset[i],
-			haveMove = moves[toId(move.name)];
-		if (whenLearned.length && !haveMove) {
-			for (var x in whenLearned) {
-				var learnByLevel = whenLearned[x].split('L');
-				if (learnByLevel.length - 1 > 0) {
-					var levelLearned = Math.abs(learnByLevel[1]);
-					if (!isNaN(levelLearned) && (levelLearned == mon.level)) {
-						//if levelLearned is a number && if we meet the level requirements to learn said move
-						var amountMovesHave = mon.moves.length;
-						if (amountMovesHave >= 4) {
-							//different kind of prompt that asks what kind of move to replace
-							function promptyLoop(errMsg) {
-								var msg = (errMsg || "") + "Your " + mon.species + " wants to learn a new move! (" + move.name + ") but you already have 4 moves. Would you like to replace a move?\n\n";
-								for (var i in mon.moves) msg += "(" + (Math.abs(i) + 1) + ") " + mon.moves[i] + "\n";
-								msg += "\nEnter the move you want to replace or hit cancel.";
-								var learnOrNaw = prompt(msg);
-								if (typeof learnOrNaw == "string") {
-									var moveId = Math.abs(learnOrNaw) - 1;
-									if (isNaN(moveId) || moveId < 0 || moveId > 3) {
-										promptyLoop("ERROR: '" + learnOrNaw + "' IS NOT AN OPTION.\n");
-									} else {
-										vars.learnMove(move.name, monKey, moveId);
-									}
-								}
-							}
-							promptyLoop();
+			haveMove = mon.moves[move.name];
+		if (whenLearned.length && !haveMove) {} else continue;
+		for (var x in whenLearned) {
+			var learnByLevel = whenLearned[x].split('L');
+			if (learnByLevel.length - 1 > 0) {} else continue;
+			var levelLearned = Math.abs(learnByLevel[1]);
+			if (!isNaN(levelLearned) && (levelLearned == mon.level)) {} else continue;
+			//if levelLearned is a number && if we meet the level requirements to learn said move
+			var amountMovesHave = mon.moves.length;
+			if (refuseLearn[move.name]) continue;
+			if (amountMovesHave >= 4) {
+				//different kind of prompt that asks what kind of move to replace
+				function promptyLoop(errMsg) {
+					var msg = (errMsg || "") + "Your " + mon.species + " wants to learn a new move! (" + move.name + ") but you already have 4 moves. Would you like to replace a move?\n\n";
+					for (var i in mon.moves) msg += "(" + (Math.abs(i) + 1) + ") " + mon.moves[i] + "\n";
+					msg += "\nEnter the move you want to replace or hit cancel.";
+					var learnOrNaw = prompt(msg);
+					if (typeof learnOrNaw == "string") {
+						var moveId = Math.abs(learnOrNaw) - 1;
+						if (isNaN(moveId) || moveId < 0 || moveId > 3) {
+							promptyLoop("ERROR: '" + learnOrNaw + "' IS NOT AN OPTION.\n");
 						} else {
-							vars.learnMove(move.name, monKey);
-							alerty("Your " + mon.species + " learned " + move.name + "!");
+							vars.learnMove(move.name, monKey, moveId);
 						}
+					} else {
+						//doesn't want to learn move
+						refuseLearn[move.name] = true;
 					}
 				}
+				promptyLoop();
+			} else {
+				vars.learnMove(move.name, monKey);
+				alerty("Your " + mon.species + " learned " + move.name + "!");
 			}
 		}
 	}
