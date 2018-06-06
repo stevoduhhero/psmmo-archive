@@ -56,6 +56,7 @@ answerConfirmy = function(t, response) {
 confirmy = function(msg, callback, args) {return alerty(msg, [callback, args], "confirm");};
 prompty = function(msg, callback, args) {var id = alerty(msg, [callback, args], "prompt");$("#baby" + id + " input").focus();return id;};
 closeAlerty = function(t) {$('#baby' + t + ', #daddy' + t).remove();};
+expAlerty = function(msg) {var id = alerty(msg);$("#baby" + id).css({left: "0px", "margin-left": "0px"});setTimeout(function() {$("#daddy" + id).click();}, 2000);};
 alerty = function(msg, info, type) {
 	var t = new Date() / 1,
 		closeByClick = '',

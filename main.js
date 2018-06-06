@@ -727,7 +727,7 @@ vars.gainExp = function(el, slot, oppLevel) {
 	function gainIt() {
 		var mon = vars.team[monKey];
 		if (mon.level < 100) mon.exp += gain;
-		alerty("Your " + mon.species + " gained " + gain + " exp.");
+		expAlerty("Your " + mon.species + " gained " + gain + " exp.");
 		if (mon.exp >= mon.nextLevelExp) {
 			$(el).css({
 				width: '0%'
@@ -743,7 +743,7 @@ vars.gainExp = function(el, slot, oppLevel) {
 				mon.exp = 0;
 				delete mon.nextLevelExp;
 			}
-			alerty("Your " + mon.species + " just leveled up to level " + mon.level + ".");
+			expAlerty("Your " + mon.species + " just leveled up to level " + mon.level + ".");
 			vars.checkLearnMove(monKey);
 			vars.checkEvolve(monKey);
 			if (oldSpecies != vars.team[monKey].species) vars.checkLearnMove(monKey);
@@ -809,7 +809,7 @@ vars.checkLearnMove = function(monKey) {
 	for (var i in learnset) {
 		var move = BattleMovedex[i];
 		var whenLearned = learnset[i],
-			haveMove = mon.moves[move.name];
+			haveMove = (mon.moves.indexOf(move.name) !== -1);
 		if (whenLearned.length && !haveMove) {} else continue;
 		for (var x in whenLearned) {
 			var learnByLevel = whenLearned[x].split('L');
@@ -1531,6 +1531,9 @@ vars.removeChat = function(id) {
 		return true;
 	}
 	return false;
+};
+vars.leaveRoom = function() {
+	$(".exitButton").click(); //taking advantage of psmmo only allowing 1 battle at a time :p
 };
 //pm stuff
 vars.dragPM = false;
