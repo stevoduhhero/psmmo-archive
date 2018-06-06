@@ -97,11 +97,13 @@ a.closeX {
 	margin-right: 20px;
 	border-radius: 20px;
 	padding-left: 3px;
+	padding-right: 3px;
 	padding-top: 1px;
 	cursor: pointer;
 	z-index: 1;
 	font-size: 16px;
 	font-weight: bold;
+	text-align: center;
 	box-shadow: 1px 1px 1px 0px rgb(80, 80, 80);
 }
 .nametag {
@@ -153,6 +155,14 @@ a.closeX {
 	width: 150px;
 	background: rgba(0, 75, 158, 0.75);
 	border-radius: 5px 5px 0px 0px;
+}
+.bagClose {
+	right: -25px !important;
+	top: -8px !important;
+}
+.infoClose {
+	right: 13px !important;
+	top: 3px !important;
 }
 #bag {
 	position: absolute;
@@ -301,7 +311,7 @@ a.closeX {
 	outline: 1px solid rgb(146, 141, 141);
 	padding: 5px;
 	cursor: default;
-	z-index: 1;
+	z-index: 9998;
 }
 #box .exitButton {
 	border: 1px solid grey;

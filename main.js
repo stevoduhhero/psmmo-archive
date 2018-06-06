@@ -40,6 +40,20 @@ vars.init = function() {
 	}).on("blur", "input, textarea", function() {
 		vars.focusedInput = false;
 	}).on("click", "#teamOrder div", function() {
+		//make $(#teamOrder div).dblclik work on mobile
+		if (vars.touchtime === 0 || vars.touchtime === undefined) {
+			vars.touchtime = new Date().getTime();
+		} else {
+			if (((new Date().getTime()) - vars.touchtime) < 800) {
+				// double click occurred
+				vars.dblclickIcon(this);
+				vars.touchtime = 0;
+			} else {
+				// not a double click so set as a new first click
+				vars.touchtime = new Date().getTime();
+			}
+		}
+
 		if (this.id == $("#teamOrder .selected").attr("id")) {
 			$(this).removeClass("selected");
 		} else {
@@ -52,16 +66,6 @@ vars.init = function() {
 				vars.updateTeamOrder();
 			}
 		}
-	}).on("dblclick", "#teamOrder div", function() {
-		var msg = "Would you like to send your " + (vars.team[this.id].species) + " to your box.";
-		confirmy(msg, function(id, doit) {
-			if (!doit) return;
-			if (vars.team.length == 1) return alerty("You can't move any more pokemon into your box because you can't have 0 pokemon in your party.");
-			var poke = vars.team[id];
-			vars.team.splice(id, 1);
-			vars.box.push(poke);
-			vars.updateTeamOrder();
-		}, [this.id]);
 	}).on("click", "#box div", function() {
 		var msg = "",
 			species = vars.box[this.id];
@@ -1009,6 +1013,20 @@ vars.slotFromPackage = function(poke) {
 	}
 	return -1;
 };
+vars.dblclickIcon = function(el) {
+	//#info, #_infoLevel, #_infoSpecies, #_infoNick, #_infoItemPic, #_infoNature, #_infoMovelist, #_infoEvs
+	var poke = vars.team[el.id];
+	vars.infoMonKey = el.id;
+	$("#info").show();
+	$("#_infoLevel").html(poke.level);
+	$("#_infoSpecies").html(poke.species);
+	$("#_infoNick").html(poke.nickname);
+	$("#_infoNature").html(poke.nature);
+	$("#_infoMovelist").html(JSON.stringify(poke.moves));
+	//add _infoItemPic
+	$("#_infoPic").html('<span class="_infoPokePic" style="' + Tools.getTeambuilderSprite(poke, 7) + ';"></span>');
+	//add #_infoEvs drag things	
+};
 vars.updateTeamOrder = function() {
 	$("#teamOrder").html(vars.updateOrder("team"));
 };
@@ -1022,6 +1040,18 @@ vars.openBox = function() {
 	'</div>';
 	
 	$("body").append(insides);
+};
+vars.sendToBox = function(pokekey) {
+	var msg = "Would you like to send your " + (vars.team[pokekey].species) + " to your box.";
+	confirmy(msg, function(id, doit) {
+		if (!doit) return;
+		if (vars.team.length == 1) return alerty("You can't move any more pokemon into your box because you can't have 0 pokemon in your party.");
+		var poke = vars.team[id];
+		vars.team.splice(id, 1);
+		vars.box.push(poke);
+		vars.updateTeamOrder();
+		$("#containmons").html(vars.updateOrder("box"));
+	}, [pokekey]);
 };
 vars.updateOrder = function(type) {
 	function monHtml(mon, id) {

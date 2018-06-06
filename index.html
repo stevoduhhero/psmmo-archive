@@ -88,10 +88,92 @@
 		</div>
 		<div id="bag">
 			<div class="relative">
-				<a class="closeX" onclick="$('#bag').hide();" style="right: -25px;top: -8px;">&#10006;</a>
+				<a class="closeX bagClose" onclick="$('#bag').hide();">&#10006;</a>
 				<div id="bagItems"></div>
 				<div id="itemDesc"></div>
 				<div id="itemIcon"></div>
+			</div>
+		</div>
+<style>
+#info {
+	display: none;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	background: #5c5cff;
+	width: 547px;
+	height: 368px;
+	z-index: 4;
+	margin-left: -273.5px;
+	margin-top: -184px;
+	text-align: center;
+	box-shadow: 2px 3px 3px #4b4b4b;
+}
+#_info {
+    line-height: 1.5;
+    display: block;
+    color: white;
+    text-shadow: 1px 1px 0px black;
+    font-size: 18px;
+    font-family: fantasy;
+}
+._infoPokePic {
+	display: inline-block;
+	width: 112px;
+	height: 84px;
+}
+.pully {
+	width: 80%;
+	outline: 1px solid black;
+	background: #afafff;
+	height: 15px;
+	position: relative;
+	display: inline-block;
+	margin-bottom: -5px;
+	margin-left: 15px;
+}
+.puller {
+	position: absolute;
+	left: -15px;
+	width: 15px;
+	height: 15px;
+	background: red;
+	cursor: pointer;
+}
+.pullyLabel {
+	position: absolute;
+	right: 100%;
+	font-weight: bold;
+	font-size: 18px;
+}
+.pullyVal {
+	position: absolute;
+	left: 100%;
+	font-weight: bold;
+	margin-top: -4px;
+	margin-left: 4px;
+}
+</style>
+		<div id="info">
+			<div class="relative">
+				<a class="closeX infoClose" onclick="$('#info').hide();">&#10006;</a>
+				<div id="_info">
+					<div id="_infoPic"></div>
+					<div>lv. <span id="_infoLevel"></span> <span id="_infoSpecies"></span>(<span id="_infoNick"></span>) <span id="_infoItemPic"></span></div>
+					<div>Nature: <span id="_infoNature"></span></div>
+					<div>Moves: <span id="_infoMovelist"></span></div>
+					<button>Change Nickname</button> <button>Give Item</button>
+				</div>
+				<div id="_infoEvs">
+					<div class="pully"><label class="pullyLabel">HP:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
+					<div class="pully"><label class="pullyLabel">Atk:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
+					<div class="pully"><label class="pullyLabel">Def:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
+					<div class="pully"><label class="pullyLabel">SpA:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
+					<div class="pully"><label class="pullyLabel">SpD:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
+					<div class="pully"><label class="pullyLabel">Spe:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
+				</div>
+				<button class="_infoSendToBox" onclick="vars.sendToBox(vars.infoMonKey);$('#info').hide();">Send to Box</button>
+				<input type="hidden" id="HAPPINESS" />
 			</div>
 		</div>
 		<div class="challenges"></div>
