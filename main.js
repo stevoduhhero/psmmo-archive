@@ -809,8 +809,8 @@ vars.checkLearnMove = function(monKey) {
 	for (var i in learnset) {
 		var move = BattleMovedex[i];
 		var whenLearned = learnset[i],
-			haveMove = (mon.moves.indexOf(move.name) !== -1);
-		if (whenLearned.length && !haveMove) {} else continue;
+			haveMove = function() {return (mon.moves.indexOf(move.name) !== -1)};
+		if (whenLearned.length && !haveMove()) {} else continue;
 		for (var x in whenLearned) {
 			var learnByLevel = whenLearned[x].split('L');
 			if (learnByLevel.length - 1 > 0) {} else continue;
@@ -818,7 +818,7 @@ vars.checkLearnMove = function(monKey) {
 			if (!isNaN(levelLearned) && (levelLearned == mon.level)) {} else continue;
 			//if levelLearned is a number && if we meet the level requirements to learn said move
 			var amountMovesHave = mon.moves.length;
-			if (refuseLearn[move.name]) continue;
+			if (refuseLearn[move.name] || haveMove()) continue;
 			if (amountMovesHave >= 4) {
 				//different kind of prompt that asks what kind of move to replace
 				function promptyLoop(errMsg) {
