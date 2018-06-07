@@ -44,10 +44,12 @@ vars.init = function() {
 		if (vars.touchtime === 0 || vars.touchtime === undefined) {
 			vars.touchtime = new Date().getTime();
 		} else {
-			if (((new Date().getTime()) - vars.touchtime) < 800) {
+			if (((new Date().getTime()) - vars.touchtime) < 500) {
 				// double click occurred
 				vars.dblclickIcon(this);
 				vars.touchtime = 0;
+				$(".selected").removeClass("selected");
+				return false;
 			} else {
 				// not a double click so set as a new first click
 				vars.touchtime = new Date().getTime();
@@ -105,9 +107,68 @@ vars.init = function() {
 			e.preventDefault();
 			return false;
 		}
+	}).on("touchstart mousedown", ".puller", function(e) {
+		var t = e.originalEvent.touches;
+		if (!t) t = e; else t = t[0];
+		vars.touchingPuller = t;
+		vars.touchingPuller._el = this;
+		if (vars.touchingPuller) {
+			e.preventDefault();
+			return false;
+		}
 	}).on("touchmove mousemove", function(e) {
 		var t = e.originalEvent.touches;
 		if (!t) t = e; else t = t[0];
+		if (vars.touchingPuller) {
+			var el = $(vars.touchingPuller._el);
+			t._el = el;
+			var diff = {
+				x: -(vars.touchingPuller.pageX - t.pageX),
+				y: -(vars.touchingPuller.pageY - t.pageY)
+			};
+			function movePuller(x) {
+				var evs = Math.round((x / maxWidth) * 252); //new stat ev
+				evs = evs - (evs % 4);
+				if (!evs) evs = 0;
+				var statType = el.attr("id");
+				var poke = vars.team[vars.infoMonKey];
+				
+				//count evs, if more than 510, don't do (return)
+				if (poke.evs) {
+					var ogStatEv = poke.evs[statType];
+					var totEvs = 0;
+					for (var stat in poke.evs) {
+						var evVal = poke.evs[stat];
+						if (stat === statType) ogStatEv = evVal;
+						totEvs += evVal;
+					}
+					totEvs = totEvs - ogStatEv + evs;
+					if (totEvs > 510) return;
+				}
+				
+				el.css({
+					left: x + "px"
+				});
+				t.pageX = el.offset().left;
+				vars.touchingPuller = t;
+				
+				if (!poke.evs) poke.evs = new Object();
+				poke.evs[statType] = evs;
+				$(".pullyVal#" + statType).html(vars.getStat(statType, vars.infoMonKey));
+				$(".pullyVal#" + statType).parent().find('small').html(evs);
+			}
+			var x = el.position().left + diff.x - (el.width() / 2);
+			if (x < 0) {
+				movePuller(0);
+				return;
+			}
+			var maxWidth = el.parent().width();
+			if (x > maxWidth) {
+				movePuller(maxWidth);
+				return;
+			}
+			movePuller(x);
+		}
 		if (vars.touchingJoystick) {
 			var diff = {
 				x: -(vars.touchingJoystick.pageX - t.pageX),
@@ -167,6 +228,9 @@ vars.init = function() {
 			}, 50);
 			var directionKeys = {up: 38, left: 37, right: 39, down: 40};
 			if (vars.username) vars.key(directionKeys[vars.players[toId(vars.username)].direction], true);
+		}
+		if (vars.touchingPuller) {
+			vars.touchingPuller = false;
 		}
 		vars.dragPM = false;
 	}).on("keypress", ".pminput", function(e) {
@@ -1014,18 +1078,31 @@ vars.slotFromPackage = function(poke) {
 	return -1;
 };
 vars.dblclickIcon = function(el) {
-	//#info, #_infoLevel, #_infoSpecies, #_infoNick, #_infoItemPic, #_infoNature, #_infoMovelist, #_infoEvs
-	var poke = vars.team[el.id];
-	vars.infoMonKey = el.id;
+	var id;
+	if (typeof el !== "object") id = el; else id = el.id;
+	var poke = vars.team[id];
+	vars.infoMonKey = id;
 	$("#info").show();
+	$("#_infoHappiness").val((poke.happiness === undefined) ? 255 : poke.happiness);
 	$("#_infoLevel").html(poke.level);
 	$("#_infoSpecies").html(poke.species);
 	$("#_infoNick").html(poke.nickname);
 	$("#_infoNature").html(poke.nature);
 	$("#_infoMovelist").html(JSON.stringify(poke.moves));
-	//add _infoItemPic
 	$("#_infoPic").html('<span class="_infoPokePic" style="' + Tools.getTeambuilderSprite(poke, 7) + ';"></span>');
-	//add #_infoEvs drag things	
+	var ray = $('.pullyVal');
+	for (var i in ray) {
+		var stat = ray[i].id;
+		var ev;
+		if (poke.evs) ev = poke.evs[stat];
+		if (!ev) ev = 0;
+		$(".puller#" + stat).css({
+			left: ((ev / 252) * $(".pullyVal").parent().width()) + "px"
+		});
+		ray[i].innerHTML = (vars.getStat(stat, vars.infoMonKey));
+		$(".pullyVal#" + ray[i].id).parent().find('small').html(ev);
+	}
+	//add _infoItemPic
 };
 vars.updateTeamOrder = function() {
 	$("#teamOrder").html(vars.updateOrder("team"));
@@ -1141,8 +1218,63 @@ vars.chooseNicknameLOOP = function(unpackedMon, nickname) {
 	var msg = (err || "") + "Enter a nickname for your new " + unpackedMon.species;
 	prompty(msg, "chooseNicknameLOOP", [unpackedMon]);
 };
+vars.changeHappiness = function(num) {
+	var poke = vars.team[vars.infoMonKey];
+	var happiness = num;
+	if (isNaN(happiness)) happiness = 255;
+	if (happiness > 255) happiness = 255;
+	if (happiness < 0) happiness = 255;
+	poke.happiness = happiness;
+	if (poke.happiness === 255) delete poke.happiness;
+};
+vars.changeNickname = function() {
+	var poke = vars.team[vars.infoMonKey];
+	var res = prompt("Enter a new nickname for your " + poke.species + ":");
+	if (typeof res != "string") return;
+	poke.nickname = $.trim(res).replace(/\|/g, '');
+	if (!toId(poke.nickname)) delete poke.nickname;
+	vars.dblclickIcon(vars.infoMonKey);
+};
+vars.getStat = function (stat, set, evOverride, natureOverride) {
+	set = vars.team[set];
+	if (!set) return 0;
 
+	if (!set.ivs) set.ivs = {
+		hp: 31,
+		atk: 31,
+		def: 31,
+		spa: 31,
+		spd: 31,
+		spe: 31
+	};
+	if (!set.evs) set.evs = {};
 
+	var template = Tools.getTemplate(set.species);
+	if (!template.exists) return 0;
+
+	if (!set.level) set.level = 100;
+	if (typeof set.ivs[stat] === 'undefined') set.ivs[stat] = 31;
+
+	var baseStat = (template).baseStats[stat];
+	var iv = (set.ivs[stat] || 0);
+	var ev = set.evs[stat];
+	if (evOverride !== undefined) ev = evOverride;
+	if (ev === undefined) ev = 0;
+
+	if (stat === 'hp') {
+		if (baseStat === 1) return 1;
+		return Math.floor(Math.floor(2 * baseStat + iv + Math.floor(ev / 4) + 100) * set.level / 100 + 10);
+	}
+	var val = Math.floor(Math.floor(2 * baseStat + iv + Math.floor(ev / 4)) * set.level / 100 + 5);
+	if (natureOverride) {
+		val *= natureOverride;
+	} else if (BattleNatures[set.nature] && BattleNatures[set.nature].plus === stat) {
+		val *= 1.1;
+	} else if (BattleNatures[set.nature] && BattleNatures[set.nature].minus === stat) {
+		val *= 0.9;
+	}
+	return Math.floor(val);
+};
 
 
 

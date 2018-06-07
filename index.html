@@ -81,7 +81,7 @@
 				<li>Type anywhere to send a message</li>
 				<li>Click on other player names to send them a challenge</li>
 				<li>Click on two different pokemon icons to switch team order</li>
-				<li>Double click on a pokemon icon to send a pokemon to your box</li>
+				<li>Double click on a pokemon icon to change / see it's information. Or send it to the box.</li>
 				<li>Get more pokeballs: tba</li>
 				</li>
 			</ul>
@@ -94,86 +94,26 @@
 				<div id="itemIcon"></div>
 			</div>
 		</div>
-<style>
-#info {
-	display: none;
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	background: #5c5cff;
-	width: 547px;
-	height: 368px;
-	z-index: 4;
-	margin-left: -273.5px;
-	margin-top: -184px;
-	text-align: center;
-	box-shadow: 2px 3px 3px #4b4b4b;
-}
-#_info {
-    line-height: 1.5;
-    display: block;
-    color: white;
-    text-shadow: 1px 1px 0px black;
-    font-size: 18px;
-    font-family: fantasy;
-}
-._infoPokePic {
-	display: inline-block;
-	width: 112px;
-	height: 84px;
-}
-.pully {
-	width: 80%;
-	outline: 1px solid black;
-	background: #afafff;
-	height: 15px;
-	position: relative;
-	display: inline-block;
-	margin-bottom: -5px;
-	margin-left: 15px;
-}
-.puller {
-	position: absolute;
-	left: -15px;
-	width: 15px;
-	height: 15px;
-	background: red;
-	cursor: pointer;
-}
-.pullyLabel {
-	position: absolute;
-	right: 100%;
-	font-weight: bold;
-	font-size: 18px;
-}
-.pullyVal {
-	position: absolute;
-	left: 100%;
-	font-weight: bold;
-	margin-top: -4px;
-	margin-left: 4px;
-}
-</style>
 		<div id="info">
 			<div class="relative">
 				<a class="closeX infoClose" onclick="$('#info').hide();">&#10006;</a>
 				<div id="_info">
 					<div id="_infoPic"></div>
-					<div>lv. <span id="_infoLevel"></span> <span id="_infoSpecies"></span>(<span id="_infoNick"></span>) <span id="_infoItemPic"></span></div>
-					<div>Nature: <span id="_infoNature"></span></div>
-					<div>Moves: <span id="_infoMovelist"></span></div>
-					<button>Change Nickname</button> <button>Give Item</button>
+					<button onclick="vars.changeNickname();">Change Nickname</button> <button>Give Item</button>
+					<div><label>lv. </label><small><span id="_infoLevel"></span></small> <span id="_infoSpecies"></span>(<small><span id="_infoNick"></span></small>) <span id="_infoItemPic"></span></div>
+					<div><label>Nature: </label><small><span id="_infoNature"></span></small></div>
+					<div><label>Moves: </label><small><span id="_infoMovelist"></span></small></div>
 				</div>
 				<div id="_infoEvs">
-					<div class="pully"><label class="pullyLabel">HP:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
-					<div class="pully"><label class="pullyLabel">Atk:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
-					<div class="pully"><label class="pullyLabel">Def:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
-					<div class="pully"><label class="pullyLabel">SpA:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
-					<div class="pully"><label class="pullyLabel">SpD:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
-					<div class="pully"><label class="pullyLabel">Spe:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal">255</span><div class="puller"></div></div>
+					<div class="pully" ontouchmove="event.preventDefault();"><small></small><label class="pullyLabel">HP:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal" id="hp"></span><div class="puller" id="hp"></div></div>
+					<div class="pully" ontouchmove="event.preventDefault();"><small></small><label class="pullyLabel">Atk:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal" id="atk"></span><div class="puller" id="atk"></div></div>
+					<div class="pully" ontouchmove="event.preventDefault();"><small></small><label class="pullyLabel">Def:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal" id="def"></span><div class="puller" id="def"></div></div>
+					<div class="pully" ontouchmove="event.preventDefault();"><small></small><label class="pullyLabel">SpA:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal" id="spa"></span><div class="puller" id="spa"></div></div>
+					<div class="pully" ontouchmove="event.preventDefault();"><small></small><label class="pullyLabel">SpD:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal" id="spd"></span><div class="puller" id="spd"></div></div>
+					<div class="pully" ontouchmove="event.preventDefault();"><small></small><label class="pullyLabel">Spe:&nbsp;&nbsp;&nbsp;</label><span class="pullyVal" id="spe"></span><div class="puller" id="spe"></div></div>
 				</div>
 				<button class="_infoSendToBox" onclick="vars.sendToBox(vars.infoMonKey);$('#info').hide();">Send to Box</button>
-				<input type="hidden" id="HAPPINESS" />
+				<div id="_infoHappinessContainer">Happiness: <input type="number" value="255" id="_infoHappiness" onchange="vars.changeHappiness(Number(this.value));" /></div>
 			</div>
 		</div>
 		<div class="challenges"></div>

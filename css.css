@@ -326,3 +326,91 @@ a.closeX {
 	height: 120px;
 	overflow-y: scroll;
 }
+
+/* poke info menu */
+#info {
+	display: none;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	background: #5c5cff;
+	width: 547px;
+	height: 368px;
+	z-index: 4;
+	margin-left: -273.5px;
+	margin-top: -184px;
+	text-align: center;
+	box-shadow: 2px 3px 3px #4b4b4b;
+}
+#_info {
+    line-height: 1.5;
+    display: block;
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    font-size: 18px;
+    font-family: fantasy;
+}
+._infoPokePic {
+	display: inline-block;
+	width: 112px;
+	height: 84px;
+}
+.pully {
+	width: 80%;
+	outline: 1px solid black;
+	background: #afafff;
+	height: 15px;
+	position: relative;
+	display: inline-block;
+	margin-bottom: -5px;
+	margin-left: 15px;
+}
+.puller {
+	position: absolute;
+	margin-left: -15px;
+	left: 0;
+	width: 15px;
+	height: 15px;
+	background: #453f49;
+	cursor: pointer;
+	outline: 1px solid #cacaca;
+}
+.pullyLabel {
+	position: absolute;
+	right: 100%;
+	font-weight: bold;
+	font-size: 18px;
+}
+.pullyVal {
+	position: absolute;
+	left: 100%;
+	font-weight: bold;
+	margin-top: -4px;
+	margin-left: 4px;
+}
+#_infoHappinessContainer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: 14px;
+	font-weight: bold;
+}
+#_infoHappiness {
+	width: 36px;
+	color: white;
+	background: #58587e;
+	font-weight: bold;	
+}
+#_infoHappiness:hover {
+	width: 41px;
+}
+#_info label, #_infoLevel {
+	color: #f6fca7f2;
+}
+#_infoEvs small {
+    font-size: 15px;
+    position: absolute;
+    left: -15px;
+    background: white;
+    height: 15px;
+}
