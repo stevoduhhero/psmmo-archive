@@ -52,6 +52,12 @@
 			this.battle.$expEl.css("width", "0px");
 
 			this.battle.play();
+			
+			//mmo add line - battle link
+			var self = this;
+			setTimeout(function() {
+				self.add('Battle Link: ' + serverLink() + "/" + self.id);
+			}, 500);
 		},
 		events: {
 			'click .replayDownloadButton': 'clickReplayDownloadButton',

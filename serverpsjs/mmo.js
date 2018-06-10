@@ -84,9 +84,12 @@ maps.mergeGuests = function(user) {
 		user.forceRename(name, '1', true);
 	}
 	for (let y in nonGuests) {
-		u = nonGuests[y];
+		u = Users.get(nonGuests[y].name);
 		if (u.setNamed) continue;
-		u.send('|setName|' + name);
+		if ((u.connections[0].inRooms.has("psmmo"))) {
+			//only send to mmo tab connection
+			u.connections[0].send('|setName|' + name);
+		}
 		u.setNamed = true;
 	}
 };
