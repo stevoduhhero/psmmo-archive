@@ -37,7 +37,8 @@
 			this.$chat = this.$chatFrame.find('.inner');
 			
 			//mmo change line, open bag onclick "battle options" button
-			this.$options = this.battle.optionsElem.html('<div style="padding-top: 3px; padding-right: 3px; text-align: right"><button class="icon button" name="openBattleOptions" title="Options" onclick="vars.openBag();">Bag || Options</button></div>');
+			//&& comment out bcos "optionsElem" undefined after battle.js update
+			//line: this.$options = this.battle.optionsElem.html('<div style="padding-top: 3px; padding-right: 3px; text-align: right"><button class="icon button" name="openBattleOptions" title="Options" onclick="vars.openBag();">Bag || Options</button></div>');
 
 			var self = this;
 			this.battle.customCallback = function () { self.updateControls(); };
