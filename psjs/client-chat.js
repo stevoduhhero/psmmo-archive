@@ -32,7 +32,7 @@
 				this.$chatAdd.html('<form><button name="login">Join chat</button></form>');
 				this.$chatbox = null;
 			} else {
-				this.$chatAdd.html('<form class="chatbox"><label style="' + hashColor(userid) + '">' + Tools.escapeHTML(name) + ':</label> <textarea class="textbox" type="text" size="70" autocomplete="off"></textarea></form>');
+				this.$chatAdd.html('<form class="chatbox"><label style="' + BattleLog.hashColor(userid) + '">' + Tools.escapeHTML(name) + ':</label> <textarea class="textbox" type="text" size="70" autocomplete="off"></textarea></form>');
 				this.$chatbox = this.$chatAdd.find('textarea');
 				this.$chatbox.autoResize({
 					animate: false,
@@ -775,7 +775,7 @@
 						battletype = format + ' battle';
 						if (format === 'Random Battle') battletype = 'Random Battle';
 					}
-					this.$chat.append('<div class="notice"><a href="' + vars.root+id + '" class="ilink">' + battletype + ' started between <strong style="' + hashColor(toUserid(name)) + '">' + Tools.escapeHTML(name) + '</strong> and <strong style="' + hashColor(toUserid(name2)) + '">' + Tools.escapeHTML(name2) + '</strong>.</a></div>');
+					this.$chat.append('<div class="notice"><a href="' + vars.root+id + '" class="ilink">' + battletype + ' started between <strong style="' + BattleLog.hashColor(toUserid(name)) + '">' + Tools.escapeHTML(name) + '</strong> and <strong style="' + BattleLog.hashColor(toUserid(name2)) + '">' + Tools.escapeHTML(name2) + '</strong>.</a></div>');
 					break;
 
 				case 'j':
@@ -961,7 +961,7 @@
 		},
 		addChat: function(name, message, pm, deltatime) {
 			var userid = toUserid(name);
-			var color = hashColor(userid);
+			var color = BattleLog.hashColor(userid);
 
 			// Add this user to the list of people who have spoken recently.
 			this.markUserActive(userid);
@@ -1145,11 +1145,11 @@
 			var group = name.charAt(0);
 			text += '<em class="group' + (this.ranks[group]===2 ? ' staffgroup' : '') + '">' + Tools.escapeHTML(group) + '</em>';
 			if (group === '~' || group === '&' || group === '#') {
-				text += '<strong><em style="' + hashColor(userid) + '">' + Tools.escapeHTML(name.substr(1)) + '</em></strong>';
+				text += '<strong><em style="' + BattleLog.hashColor(userid) + '">' + Tools.escapeHTML(name.substr(1)) + '</em></strong>';
 			} else if (group === '%' || group === '@') {
-				text += '<strong style="' + hashColor(userid) + '">' + Tools.escapeHTML(name.substr(1)) + '</strong>';
+				text += '<strong style="' + BattleLog.hashColor(userid) + '">' + Tools.escapeHTML(name.substr(1)) + '</strong>';
 			} else {
-				text += '<span style="' + hashColor(userid) + '">' + Tools.escapeHTML(name.substr(1)) + '</span>';
+				text += '<span style="' + BattleLog.hashColor(userid) + '">' + Tools.escapeHTML(name.substr(1)) + '</span>';
 			}
 			text += '</button>';
 			text += '</li>';
