@@ -57,7 +57,8 @@
 			//mmo add line - battle link
 			var self = this;
 			setTimeout(function() {
-				self.add('Battle Link: ' + serverLink() + "/" + self.id);
+				var url = serverLink() + "/" + self.id;
+				self.$chat.append('<a href="' + url + '" target="_BLANK">Battle Link: ' + url + '</a>');
 			}, 500);
 		},
 		events: {

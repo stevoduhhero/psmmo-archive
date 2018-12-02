@@ -45,6 +45,14 @@
 		<script src="./helpers.js"></script>
 		<script src="./main.js"></script>
 		<style id="battleZoom">.ps-room-opaque {}</style>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-125398472-2"></script>
+		<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+ 		gtag('config', 'UA-125398472-2');
+		</script>
 	</head>
 	<body>
 		<script>
@@ -69,12 +77,13 @@
 			</div>
 		</div>
 		<div id="rightPanel">
+			<a target="_BLANK" href="https://helloworld.psim.us"><img width="100%" src="https://cdn.glitch.com/e5ac2125-07b1-49d0-9d0b-ec37b350d6f2%2Flogo.png?1538284901702" alt="Logo" /></a>
 			&nbsp;<img id="audioStatus" src="./stolenaudio.png" height="18" style="cursor: pointer;" />&nbsp;
 			<button onclick="vars.saveGame();">Save Game</button><button onclick="vars.openBag();">Open Bag</button>
 			<div id="teamOrder"></div>
 			<input type="text" id="invisitype" placeholder="Message..." />
 			<hr />
-			<div ontouchmove="event.preventDefault();" id="joystick" style="height: 150px;position: relative;width: 100%;">
+			<div ontouchmove="event.preventDefault();" id="joystick" style="background: white linear-gradient(0deg, #818f3e, #e3c785);height: 150px;position: relative;width: 100%;">
 				<div style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 150px;height: 150px;margin-top: -75px;margin-left: -75px;background: #b6b6b6;box-shadow: 0 0 0 5px #b1b1b1;"></div>
 				<div style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 75px;height: 75px;margin-top: -37.5px;margin-left: -37.5px;background: #b1b1b1;box-shadow: 0px 0px 10px 5px rgb(153, 152, 152);"></div>
 				<div id="centro" style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 75px;height: 75px;margin-top: -37.5px;margin-left: -37.5px;background: rgb(199, 199, 199);box-shadow: 0px 0px 0px 1px rgb(153, 152, 152);font-size: 12px;text-align: center;line-height: 64px;color: white;text-shadow: black 1px 1px 1px;cursor: pointer;">JOYSTICK</div>

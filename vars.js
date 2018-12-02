@@ -1,10 +1,10 @@
 var vars = new Object();
 
 //server settings
-vars.wildPokemonBot = "Booty-Bot";
-vars.server = "elloworld.ddns.net"; //link to your Pokemon Showdown server / ip address [THIS IS NOT A .psim.us address]
-vars.serverName = "Hello World"; //name of your server on the PS registry [IF does not apply to your server: set equal to vars.server]
-vars.port = 8000; //default showdown port
+vars.wildPokemonBot = "PSMMO-Bot";
+vars.server = "psmmo.glitch.me"; //link to your Pokemon Showdown server / ip address [THIS IS NOT A .psim.us address]
+vars.serverName = "Hello World"; //name of your server on the PS registry [IF nameles: set equal to vars.server]
+vars.port = 80; //default showdown port (8000)
 
 //game settings
 vars.startItems = {
@@ -25,7 +25,7 @@ vars.mapAdditives = {
 };
 
 //client variables
-if (window.location.host === "localhost") {
+if (window.location.host === "localhost" && vars.server !== "psmmo.glitch.me") {
 	vars.server = 'localhost';
 	vars.serverName = 'localhost';
 }
