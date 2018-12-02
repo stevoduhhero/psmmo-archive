@@ -1,4 +1,5 @@
 Tools.escapeHTML = function(txt) {return $('<div />').text(txt).html()};
+window.hashColor = BattleLog.hashColor;
 vars.init = function() {
 	BattleItems = cacheBattleItems;
 
