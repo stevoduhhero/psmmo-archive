@@ -3123,7 +3123,7 @@ poke.side.dragIn(poke);
 }
 this.log(args,kwArgs);
 			//mmo
-			vars.differentMonInfo(((_poke44.side === this.mySide) ? "you" : "opp"), vars.slotFromPackage(this.mySide.active[0]), this.$expEl);
+			vars.differentMonInfo(((poke.side === this.mySide) ? "you" : "opp"), vars.slotFromPackage(this.mySide.active[0]), this.$expEl);
 
 break;
 }
