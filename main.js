@@ -1,15 +1,15 @@
 vars.init = function() {
 	BattleItems = cacheBattleItems;
-	
+
 	//initialize
 	vars.openSaveData();
 	vars.loadMap(vars.mapName);
 	vars.resize();
-	
+
 	//mute or no
 	if (!Tools.prefs('mute')) var opacity = 1; else var opacity = 0.5;
 	$('#audioStatus').css('opacity', opacity);
-	
+
 	//connect socket
 	var sock = new SockJS(window.location.protocol + "//" + vars.server + ':' + vars.port + '/showdown/');
 	sock.onopen = function() {console.log('open');};
@@ -19,11 +19,11 @@ vars.init = function() {
 	};
 	sock.onclose = function() {console.log('close');};
 	vars.socket = sock;
-	
+
 	if (!vars.team.length) vars.chooseStarterPrompt();
 
 	vars.initializeLoginIntervals();
-	
+
 	//dom events
 	$(window).focus(function() {
 		vars.windowFocus = true;
@@ -31,14 +31,25 @@ vars.init = function() {
 		vars.windowFocus = false;
 	}).on('resize', this.resize);
 
+	var rp = $('#rightPanel');
+	$("#rightPanel a:eq(0)").on('click', function(e) {
+		e.preventDefault();
+		if (rp.hasClass('focused')) {
+			rp.removeClass('focused').scrollTop(0);
+		} else {
+			rp.addClass('focused');
+		}
+	});
 	$(document).keydown(function(e) {
-		vars.key(e.keyCode);
+		vars.key(e.keyCode, null, e);
 	}).keyup(function(e) {
-		vars.key(e.keyCode, true);
+		vars.key(e.keyCode, true, e);
 	}).on("focus", "input, textarea", function() {
 		vars.focusedInput = this;
+		vars.resize(true);
 	}).on("blur", "input, textarea", function() {
 		vars.focusedInput = false;
+		if (!rp.hasClass('focused')) rp.scrollTop(0);
 	}).on("click", "#teamOrder div", function() {
 		//make $(#teamOrder div).dblclik work on mobile
 		if (vars.touchtime === 0 || vars.touchtime === undefined) {
@@ -49,7 +60,6 @@ vars.init = function() {
 				vars.dblclickIcon(this);
 				vars.touchtime = 0;
 				$(".selected").removeClass("selected");
-				return false;
 			} else {
 				// not a double click so set as a new first click
 				vars.touchtime = new Date().getTime();
@@ -99,7 +109,8 @@ vars.init = function() {
 		var userid = toId(this.innerHTML);
 		if (!vars.players[userid] || userid == toId(vars.username)) return;
 		var chall = confirmy("Are you sure you would like to challenge '" + userid + "' to a battle?", "sendChallenge", [userid]);
-	}).on("touchstart mousedown", "#joystick", function(e) {
+	}).on("touchstart mousedown", "#map", function(e) {
+		$('input, textarea').blur();
 		var t = e.originalEvent.touches;
 		if (!t) t = e; else t = t[0];
 		vars.touchingJoystick = t;
@@ -132,7 +143,7 @@ vars.init = function() {
 				if (!evs) evs = 0;
 				var statType = el.attr("id");
 				var poke = vars.team[vars.infoMonKey];
-				
+
 				//count evs, if more than 510, don't do (return)
 				if (poke.evs) {
 					var ogStatEv = poke.evs[statType];
@@ -145,13 +156,12 @@ vars.init = function() {
 					totEvs = totEvs - ogStatEv + evs;
 					if (totEvs > 510) return;
 				}
-				
 				el.css({
 					left: x + "px"
 				});
 				t.pageX = el.offset().left;
 				vars.touchingPuller = t;
-				
+
 				if (!poke.evs) poke.evs = new Object();
 				poke.evs[statType] = evs;
 				$(".pullyVal#" + statType).html(vars.getStat(statType, vars.infoMonKey));
@@ -178,16 +188,11 @@ vars.init = function() {
 			if (diff.x < -20) diff.x = -20;
 			if (diff.y > 20) diff.y = 20;
 			if (diff.y < -20) diff.y = -20;
-			var centr = $('#centro');
-			centr.css({
-				left: ($("#joystick").width() / 2 + diff.x) + 'px',
-				top: ($("#joystick").height() / 2 + diff.y) + 'px'
-			});
 			var directionKeys = {up: 38, left: 37, right: 39, down: 40};
 			var orientation = "";
 			if (Math.abs(diff.x) > Math.abs(diff.y)) {
 				orientation = "right";
-				if (diff.x < 0) orientation = "left"; 
+				if (diff.x < 0) orientation = "left";
 			} else {
 				orientation = "down";
 				if (diff.y < 0) orientation = "up";
@@ -274,7 +279,7 @@ vars.initializeLoginIntervals = function() {
 			} else if (holder === ".") {
 				newholder += "..";
 			}
-			el.attr("placeholder", newholder);	
+			el.attr("placeholder", newholder);
 		}, 500);
 	} else invisitypePlaceholderAnimation = null;
 
@@ -347,7 +352,7 @@ vars.chooseStarterPrompt = function() {
 		insides += '<div style="float: left;width: 50px;height: 50px;overflow: hidden;">';
 		insides += '<img style="cursor: pointer;margin-top: -20px;margin-left: -20px;"';
 		insides += ' onclick="vars.chooseStarter(\'' + starters[i] + '\');vars.items = vars.startItems;"';
-		insides += ' src="http://play.pokemonshowdown.com/sprites/bw/' + mon.species.toLowerCase() + '.png"';
+		insides += ' src="http://play.pokemonshowdown.com/sprites/bw/' + (mon ? mon.species.toLowerCase() : '') + '.png"';
 		insides += ' />';
 		insides += '</div>';
 		if ((i + 1) / 3 == Math.floor((i + 1) / 3)) {
@@ -376,7 +381,7 @@ vars.chooseStarter = function(monId) {
 		var canLearnNow = false;
 		if (whenLearned.length) {
 			for (var x in whenLearned) {
-				var learnByLevel = whenLearned[x].split('L');
+				var learnByLevel = whenLearned[x].split ? whenLearned[x].split('L') : [];
 				if (learnByLevel.length - 1 > 0) {
 					var levelLearned = Math.abs(learnByLevel[1]);
 					if (!isNaN(levelLearned) && (levelLearned <= starterLevel)) {
@@ -413,37 +418,61 @@ vars.chooseStarter = function(monId) {
 	vars.team = team;
 	vars.updateTeamOrder();
 };
-vars.resize = function() {
+vars.resize = function(keyboardResize) {
 	var body = $("body");
-	
-	//hackish resizing stuff
-	vars.rightPanel = {width: 200};
-	vars.battleCSS = {height: 515};
-	//if battles bigger than screen, shrink battles
-	if (vars.battleCSS.height > body.height()) {
-		var battleZoom = (body.height() - vars.battleCSS.height) / vars.battleCSS.height * 100;
-		$("#battleZoom").html(".ps-room-opaque {zoom: " + (97 + battleZoom) + "%;-moz-transform: scale(" + ((100 + battleZoom) / 100) + ");-moz-transform-origin: 0 0;}");
-	}
-	
+
 	$("#map").width(vars.block.x * vars.block.width).height(vars.block.y * vars.block.height);
 	var canvas = $("#map");
-	var spaceAvailableY = body.height() - canvas.height();
-	var spaceAvailableX = body.width() - canvas.width() - vars.rightPanel.width;
+	var spaceAvailableY = body.height() - canvas.height(), spaceAvailableX = body.width() - canvas.width();
 	var percentZoomY = spaceAvailableY / canvas.height() * 100;
 	var percentZoomX = spaceAvailableX / canvas.width() * 100;
-	var percentZoom = percentZoomY;
-	if (percentZoomX < percentZoom) percentZoom = percentZoomX;
+	var percentZoom = percentZoomX;
+	if (percentZoomY > percentZoomX) percentZoom = percentZoomY;
+	var scale = "scale(" + ((100 + percentZoom) / 100) + " )";
 	canvas.css({
-		"zoom": 100 + percentZoom + "%",
-		//make it work on firefox
-		"-moz-transform": "scale(" + ((100 + percentZoom) / 100) + " )",
+		"transform": scale,
+		"-moz-transform": scale,
+		"-ms-transform": scale,
+		"transform-origin": "0 0",
 		"-moz-transform-origin": "0 0",
+		"-ms-transform-origin": "0 0"
+	}).css({ //need to recalc after transform
+		"margin-left": ((body.width() - canvas[0].getBoundingClientRect().width)/2) + "px",
+		"margin-top": ((body.height() - canvas[0].getBoundingClientRect().height)/2) + "px"
 	});
-	
-	var leftOvers = (body.width() - (canvas.width() * ((100 + percentZoom) / 100)));
-	$("#rightPanel").width(leftOvers);
+
+	//resize battles
+	if (keyboardResize || (vars.oldHeight && vars.focusedInput && vars.oldHeight !== body.height())) {
+		function agent() {
+			var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+			if (/windows phone/i.test(userAgent)) return "Windows Phone";
+			if (/android/i.test(userAgent)) return "Android";
+			if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) return "iOS";
+			return "unknown";
+		}
+		if (agent() === "iOS") {
+			setTimeout(function() {
+				window.scrollTo(0, $('.ps-room textarea').offset().top - 100);
+			}, 0);
+		} else return; //viewport changes w/ keyboard (depends on browser) & makes battles super tiny
+	}
+	vars.battleCSS = {height: 515, width: 901};
+	//if battles bigger than screen, shrink battles
+	function zoom(num) {
+		$("#battleZoom").html(".ps-room-opaque {transform: scale(" + ((95 + num) / 100) + ");transform-origin: right bottom;-ms-transform: scale("+((95+num)/100)+");-ms-transform-origin: right bottom;}");
+	}
+	function zoomX() {zoom((body.width() - vars.battleCSS.width) / vars.battleCSS.width * 100);}
+	function zoomY() {zoom((body.height() - vars.battleCSS.height) / vars.battleCSS.height * 100);}
+	if (vars.battleCSS.height > body.height()) {
+		zoomY();
+	} else zoomX();
+	if (vars.battleCSS.width > body.width()) {
+		zoomX();
+	} else zoomY();
+
+	vars.oldHeight = body.height();vars.oldWidth = body.width();
 };
-vars.key = function(key, keyup) {
+vars.key = function(key, keyup, e) {
 	if (!vars.username) return;
 	var keys = {37: "left", 38: "up", 39: "right", 40: "down"};
 	var dir = keys[key] || key,
@@ -453,7 +482,7 @@ vars.key = function(key, keyup) {
 		//not an arrow key
 		var el = $("#invisitype");
 		if ($(vars.focusedInput).length) el = $(vars.focusedInput);
-		el.focus();
+		if (e) el.focus();
 		if (el.attr('id') == "invisitype" && key == 13 && el.val()) {
 			vars.send('/mmo  msg.' + el.val());
 			el.val("");
@@ -515,7 +544,7 @@ vars.walkLoop = function() {
 			css += (vars.character[user.cycleType][dir][user.cycle].x * -1) + 'px ';
 			css += (vars.character[user.cycleType][dir][user.cycle].y * -1) + 'px';
 			sprite.find('.p').css('background', css);
-			
+
 			walkers = true;
 			var revert = {x: user.x, y: user.y};
 			user.stepFrameCount++;
@@ -554,7 +583,7 @@ vars.walkLoop = function() {
 					range.min.y = you.y - ((showBlocks.y / 2));
 					range.max.x = range.min.x + vars.block.x;
 					range.max.y = range.min.y + vars.block.y;
-					
+
 					if ((user.x >= range.min.x && user.x <= range.max.x) && (user.y >= range.min.y && user.y <= range.max.y)) {
 						inRange = true;
 					} else inRange = false;
@@ -565,7 +594,7 @@ vars.walkLoop = function() {
 						left: (vars.block.width * user.x) + 'px',
 						top: (vars.block.height * user.y) + 'px'
 					}, vars.fps);
-				}			
+				}
 			}
 		}
 	}
@@ -603,7 +632,7 @@ vars.newPlayer = function(name) {
 				y: vars.startingPosition.y,
 				framesPerStep: 1,
 				stepFrameCount: 0,
-			};	
+			};
 	}
 	var userid = toId(name);
 	var user = playerVars();
@@ -615,7 +644,7 @@ vars.newPlayer = function(name) {
 		delete vars.newStartingPosition;
 	}
 	this.players[userid] = user;
-	
+
 	var insides = '';
 	insides += '<div id="p' + userid + '" class="player" style="';
 	insides += 'width: ' + vars.block.width + 'px;';
@@ -669,16 +698,19 @@ vars.focusCamera = function() {
 		});
 		vars.focusing = false;
 	} else {
-		$("#container .mapimg").animate({
-			'background-position-x': (-left) + "px",
-			'background-position-y': (-top) + "px",
-		}, vars.fps / 3, 'linear', function() {
-			vars.focusing = false;
-		});
-		$("#players").animate({
+		var img = document.getElementsByClassName('mapimg')[0];
+		$('#players').animate({
 			left: -left + "px",
 			top: -top + "px"
-		}, vars.fps / 3);
+		}, {
+			easing: "linear",
+			duration: vars.fps / 3,
+			callback: function() {vars.focusing = false;},
+			step: function() {
+				img.style['background-position-x'] = this.style.left;
+				img.style['background-position-y'] = this.style.top;
+			}
+		});
 	}
 };
 vars.loadMap = function(name) {
@@ -692,7 +724,7 @@ vars.loadMap = function(name) {
 			y: Math.floor(newStartingPosition[0])
 		};
 	}
-	
+
 	Tools.getScript("./maps/" + name, function(data) {
 		var data = data.split('\n');
 		var name = data[0].split(':')[1],
@@ -715,14 +747,14 @@ vars.loadMap = function(name) {
 		}
 		vars.doors = doors;
 		data.splice(0, 5);
-		
+
 		if (vars.username && vars.username.substr(0, 6) != "Guest ") vars.send('/start ' + name);
-		
+
 		vars.startingPosition = {
 			x: Math.floor(startingPosition[1]),
 			y: Math.floor(startingPosition[0])
 		};
-		
+
 		var img = new Image();
 		img.src = './maps/' + id + '.png';
 		img.onload = function() {
@@ -771,8 +803,8 @@ vars.encounterMon = function() {
 	var user = vars.players[toId(vars.username)];
 	for (var i in vars.encounterMons) {
 		var mon = vars.encounterMons[i];
-		var monId = mon.slice(0, -1),
-			rank = mon.substr(-1);
+		var monId = mon.slice ? mon.slice(0, -1) : '',
+			rank = mon.substr ? mon.substr(-1) : '';
 		var probability = vars.rates.encounterRate[rank] / 187.5;
 		probability = probability * 100;
 		if (chance(probability)) {
@@ -827,7 +859,7 @@ vars.gainExp = function(el, slot, oppLevel) {
 	for (var monKey in vars.expDivision) gainIt();
 	vars.expDivison = new Object();
 	vars.encounteredMon = false;
-	
+
 	vars.updateTeamOrder();
 };
 vars.checkEvolve = function(monKey) {
@@ -950,7 +982,7 @@ vars.openSaveData = function() {
 	if (localStorage.getItem("items")) {
 		var items = localStorage.getItem("items").split("|");
 		for (var i in items) {
-			var splint = items[i].split('*');
+			var splint = items[i].split ? items[i].split('*') : [];
 			var itemId = splint[0],
 				itemSupply = Math.abs(splint[1]);
 			vars.items[itemId] = itemSupply;
@@ -1016,7 +1048,7 @@ vars.actuallyUseItem = function(itemId, doit) {
 				catchRate = 255, //do catchRates[pokemonId]
 				currentHP = 404, //check
 				maxHP = 404; //check
-			
+
 			//calculate
 			var catchValue = (((3 * maxHP) - (2 * currentHP) * catchRate * ballModifier) / (3 * maxHP)) * statusModifier;
 			var captured = 1048560 / Math.sqrt(Math.sqrt(16711680 / Math.abs(catchValue)));
@@ -1030,7 +1062,7 @@ vars.actuallyUseItem = function(itemId, doit) {
 				if (shakes < 4) shake();
 			}
 			shake();
-			
+
 			if (ballModifier === true) shakesStayInside = 0; //masterball
 			if (shakesStayInside == 4) {
 				//catch
@@ -1115,7 +1147,7 @@ vars.openBox = function() {
 	'<h2>Box</h2>' +
 	'<div id="containmons">' + vars.updateOrder("box") + '</div>' +
 	'</div>';
-	
+
 	$("body").append(insides);
 };
 vars.sendToBox = function(pokekey) {
@@ -1136,7 +1168,7 @@ vars.updateOrder = function(type) {
 	}
 	var insides = '';
 	for (var i in vars[type]) insides += monHtml(vars[type][i], i);
-	if (type == "team") insides += ' <span onclick="vars.openBox();">Open Box</span>';
+	if (type == "team") insides += '&nbsp;<span onclick="vars.openBox();">Open Box</span>';
 	return insides;
 };
 vars.startAnims = function() {
@@ -1158,7 +1190,7 @@ vars.startAnimLoop = function() {
 		y: currentPos.y + incrementPerFrame.y
 	};
 	el.css('background-position', newPos.x + 'px ' + newPos.y + 'px');
-	
+
 	anim[1] = newPos;
 	anim[3]++;
 	if (anim[3] == totalFrames) vars.anims.splice(0, 1);
@@ -1280,7 +1312,8 @@ vars.getStat = function (stat, set, evOverride, natureOverride) {
 
 
 /* showdownish stuff */
-vars.send = function (data, room) {
+vars.send = function (data, room, mapThing) {
+	if (mapThing && Object.keys(vars.players).length === 1) return; //user is alone, no need to send updates
 	if (room && room !== 'lobby' && room !== true) {
 		data = room+'|'+data;
 	} else if (room !== true) {
@@ -1464,7 +1497,7 @@ vars.receive = function(data) {
 			vars.players = new Object();
 			var players = parts[1].split(']');
 			for (var i in players) {
-				var player = players[i].split('[');
+				var player = players[i].split ? players[i].split('[') : [];
 				if (!player[2]) continue;
 				vars.newPlayer(player[0]);
 				vars.updatePlayer(player);
@@ -1506,9 +1539,9 @@ vars.receive = function(data) {
 			//if (parts[1].substr(0, 6) != "Guest ") vars.send('/start ' + vars.mapName);
 			if (typeof BattleFormats == "undefined") vars.parseFormats(parts); //formats line
 			break;
-		
-		
-		
+
+
+
 		/* normal shit */
 		case 'challenge-string':
 		case 'challstr':

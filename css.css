@@ -7,8 +7,11 @@ body, html {
 	color: black !important;
 	font-family: initial !important;
 	font-size: initial !important;
-	background: none;
+	background: #efe4bd;
 }
+a {color: #787878;}
+a:hover {color: black;text-decoration-color: #4d7dbf;}
+hr {border-width: 1px;border-style: inset;padding: 0;margin: 0;}
 #map {
 	position: relative;
 	overflow: hidden;
@@ -24,13 +27,30 @@ body, html {
 	height: 100%;
 }
 #rightPanel {
+	z-index: 4;
 	position: absolute;
-	right: 0;
-	top: 0;
-	height: 100%;
-	overflow-y: auto;
+	right: 10px;
+	top: 10px;
+	width: 232px;
+	height: 67px;
+	overflow-y: hidden;
 	overflow-x: hidden;
+	background: rgba(255, 250, 204, 0.85);
+	opacity: 0.75;
+	transition: opacity 500ms ease-in-out;
+	outline: 1px solid black;
 }
+#rightPanel:hover {opacity: 1;}
+#rightPanel.focused {
+	overflow-y: auto;
+	opacity: 1;
+	height: 100%;
+	width: 310px;
+	top: 0;
+	right: 0;
+	outline: none;
+}
+#rightPanel form {text-align: center;}
 #teamOrder {
 	width: 100%;
 	height: 24px;
@@ -46,8 +66,8 @@ body, html {
 	width: 40px;
 	height: 30px;
 	float: left;
-	outline: 1px solid #b6b6b6;
-	margin-right: 5px;
+	outline: 1px solid #767676;
+	background-color: #f5f5f5 !important;
 	cursor: pointer;
 }
 #teamOrder .selected {
@@ -69,6 +89,7 @@ body, html {
 	z-index: 1;
 	font-weight: bold;
 	text-shadow: 0px 1px 0px black;
+	border: 1px solid #7c7c7c;
 }
 
 
@@ -169,6 +190,7 @@ a.closeX {
 	left: 50%;
 	top: 50%;
 	background: url('./itemscontainer.png');
+	background-size: 100% 100%;
 	width: 547px;
 	height: 368px;
 	z-index: 4;
@@ -176,22 +198,31 @@ a.closeX {
 	margin-top: -184px;
 	display: none;
 }
+@media (max-width: 547px) {
+	#bag {
+		width: 92%;
+		left: 4%;
+		margin-left: 0;
+	}
+}
+
 #bagItems {
 	position: absolute;
-	right: 20px;
-	top: 20px;
-	width: 278px;
+	right: 4%;
+	top: 4%;
+	width: 52.651%;
+	height: 64.403%;
 	padding: 5px;
-	height: 222px;
+	box-sizing: border-box;
 	overflow-y: scroll;
 	overflow-x: hidden;
 }
 #itemDesc {
 	position: absolute;
-	left: 80px;
-	top: 276px;
-	width: 454px;
-	height: 87px;
+	left: 14.7%;
+	top: 75%;
+	width: 83%;
+	height: 23.643%;
 	overflow: auto;
 	overflow-x: hidden;
 	font-size: 20px;
@@ -202,10 +233,10 @@ a.closeX {
 }
 #itemIcon {
 	position: absolute;
-	left: 14px;
-	top: 295px;
-	width: 50px;
-	height: 50px;
+	left: 2.5%;
+	top: 80.2%;
+	width: 9.142%;
+	height: 13.589%;
 	overflow-x: hidden;
 	text-align: center;
 }
@@ -238,7 +269,7 @@ a.closeX {
 	position: absolute;
 	bottom: 1px !important;
 	top: auto;
-	right: 0;
+	left: 0;
 	left: auto;
 	outline: 1px solid rgb(179, 179, 179);
 	z-index: 3;
@@ -413,4 +444,67 @@ a.closeX {
     left: -15px;
     background: white;
     height: 15px;
+}
+
+
+
+/* CHANGE PS media queries */
+@media not all and (min-width: 440px) and (max-width: 590px) and (max-width: 518px) and (max-width: 895px) and (max-width: 570px) and (max-width: 649px) and (max-width: 410px) and (max-width: 639px) {
+	.controls {
+		bottom: auto;
+		top: 0;
+		width: auto;
+		background: #444444;
+		background: rgba(40,40,40,.85);
+		color: #FFFFFF;
+		padding: 4px 8px;
+		margin-top: -9px;
+	}
+	.movemenu {
+		display: block;
+		padding: 0;
+	}
+	.switchmenu {
+		display: block;
+		max-width: 325px;
+		padding: 0 75px 0 85px;
+		margin: 0 0 0 auto;
+	}
+	.moveselect {
+		position: inherit;
+		left: 20px;
+		bottom: 20px;
+	}
+	.switchselect {
+		position: absolute;
+		right: 20px;
+		bottom: 20px;
+	}
+	.shiftselect {
+		position: absolute;
+		right: 150px;
+		bottom: 20px;
+	}
+	.moveselect button, .switchselect button, .shiftselect button {
+		padding: 4px 8px;
+		border-radius: 6px;
+		background: #E5E5E5;
+		display: none;
+	}
+	.megaevo {
+		margin: 0 auto 8px 50px;
+	}
+
+	.battle-controls .whatdo {
+		padding-bottom: 0;
+	}
+	.battle-controls .move-controls .whatdo,
+	.battle-controls .switch-controls .whatdo {
+		padding-bottom: 5px;
+	}
+	.move-controls .movemenu,
+	.switch-controls .switchmenu {
+		display: block;
+		margin-right: 0;
+	}
 }

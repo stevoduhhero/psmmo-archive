@@ -3,6 +3,8 @@
 	<head>
 		<title>PSmmo</title>
 		<meta name="viewport" content="width=device-width, initial-scale=0.7, maximum-scale=0.7, user-scalable=0"/>
+		<meta name="description" content="A Pokémon website: play online for free. Run through grass, level up, and catch em' all in this exciting MMO based on the Pokemon-Showdown game engine." />
+		<link rel="shortcut icon" type="image/ico" href="https://cdn.glitch.com/e5ac2125-07b1-49d0-9d0b-ec37b350d6f2%2Ffavicon.ico?1536280160850">
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/client.css" />
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/sim-types.css" />
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/battle.css" />
@@ -46,18 +48,22 @@
 	</head>
 	<body>
 		<script>
-			function serverLink() {return window.location.protocol + "//" + toId(vars.serverName) + ".psim.us";}
+			function serverLink() {
+				let serverName = (vars.serverName.split('.').length - 1 > 0) ? vars.serverName : toId(vars.serverName);
+				return window.location.protocol + "//" + serverName + ".psim.us";
+			}
+			//redirect https->http
+			if (location.protocol != 'http:') location.href = 'http:' + window.location.href.substring(window.location.protocol.length);
+			if (document.location.host === "elloworld.glitch.me") document.location.href = 'http://psmmo.glitch.me';
 			document.body.innerHTML += '<iframe id="loginFrame" src="' + serverLink() + '" style="display: none;"></iframe>';
-			$(function() {
-				vars.init();
-			});
+			$(function() {vars.init();});
 		</script>
 		<div id="loginform" style="position: absolute;top: 0;left: 0;margin: 80px;margin-left: 30px;border: 1px solid #b6b6b6;padding: 5px;background: white;z-index: 1;">
 			<h3>Login on <a id="serverlink" target="_BLANK">Pokemon Showdown</a> and refresh.</h3>
 			<span>Account must be registered.</span>
 			<span id="connectingAnimation" style="font-style: italic;">Connecting...</span>
 		</div>
-		<div id="map">
+		<div id="map" ontouchstart="event.preventDefault();">
 			<div id="container">
 				<div id="players"></div>
 			</div>
@@ -77,7 +83,7 @@
 			<ul>
 				<h2><a href="https://psmmo.000webhostapp.com/forums/" target="_BLANK">Forums for PSmmo</a></h2>
 				<h3>How to play</h3>
-				<li>Arrows/Joystick for moving around</li>
+				<li>Arrows / Touch map to move around</li>
 				<li>Type anywhere to send a message</li>
 				<li>Click on other player names to send them a challenge</li>
 				<li>Click on two different pokemon icons to switch team order</li>
@@ -85,6 +91,12 @@
 				<li>Get more pokeballs: tba</li>
 				</li>
 			</ul>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_BLANK">
+				<input type="hidden" name="cmd" value="_s-xclick">
+				<input type="hidden" name="hosted_button_id" value="6QAR9UE27CTLU">
+				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+				<img alt="Donate now!" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
 		</div>
 		<div id="bag">
 			<div class="relative">
@@ -117,5 +129,5 @@
 			</div>
 		</div>
 		<div class="challenges"></div>
-		<div id="userCount" style="position: absolute;top: 0;left: 0;z-index: 9999;background: rgba(255, 255, 255, 0.5);"></div>
+		<div id="userCount" style="position: absolute;top: 0;left: 0;z-index: 1;background: rgba(255, 255, 255, 0.5);"></div>
 </html>
