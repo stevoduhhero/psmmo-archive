@@ -1,4 +1,5 @@
 Tools.escapeHTML = function(txt) {return $('<div />').text(txt).html()};
+BattleLearnsets = BattleTeambuilderTable.learnsets;
 vars.init = function() {
 	BattleItems = cacheBattleItems;
 
