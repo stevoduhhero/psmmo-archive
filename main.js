@@ -1,3 +1,4 @@
+Tools.escapeHTML = function(txt) {return $('<div />').text(txt).html()};
 vars.init = function() {
 	BattleItems = cacheBattleItems;
 
