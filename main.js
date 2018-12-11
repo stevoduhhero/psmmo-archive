@@ -1,3 +1,4 @@
+for (let i in Dex) Tools[i] = Dex[i];
 Tools.escapeHTML = function(txt) {return $('<div />').text(txt).html()};
 window.app = vars;
 vars.init = function() {
