@@ -505,7 +505,7 @@ vars.key = function(key, keyup, e) {
 		user.walking = true;
 		user.direction = dir;
 		vars.initWalkLoop();
-		vars.send('/mmo start.' + dir);
+		vars.send('/mmo start.' + dir, undefined, true);
 	}
 	if (keyup) delete vars.heldKeys[key]; else vars.heldKeys[key] = true;
 };
@@ -518,7 +518,7 @@ vars.stopWalking = function() {
 	var user = vars.players[toId(vars.username)];
 	user.walking = false;
 	if (vars.lastStop) if (vars.lastStop.x == user.x && vars.lastStop.y == user.y) return;
-	vars.send('/mmo stop.' + user.x + '.' + user.y);
+	vars.send('/mmo stop.' + user.x + '.' + user.y, undefined, true);
 	vars.lastStop = {x: user.x, y: user.y};
 };
 vars.initWalkLoop = function() {
