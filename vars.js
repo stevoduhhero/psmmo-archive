@@ -14,14 +14,12 @@ vars.startItems = {
 };
 
 //add custom pokemon to a map
+//poke.rarity = 0-4, where 0 = least rare, & 4 = most rare
+/*vars.mapAdditives = {  mapName: [( poke.name + poke.rarity ),  ...]
+						 ...
+					  };                                                 */
 vars.mapAdditives = {
-	/*
-		rarity = 0-4, where 0 = least rare, & 4 = most rare
-		mapName: [(poke.name + poke.rarity), ...],
-		
-		ex: start: ["pikachu3", "metapod1", ...]
-	*/
-	start: ["pikachu3"]
+	start: ["pikachu3", "metapod1", /*  ...  */]
 };
 
 //client variables
