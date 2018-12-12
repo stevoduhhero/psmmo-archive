@@ -721,6 +721,9 @@ vars.focusCamera = function() {
 	}
 };
 vars.loadMap = function(name) {
+	var mapImg = $('.mapimg').css('background', 'none');
+	$('.player').hide();
+	var t1 = new Date() / 1;
 	var splint = name.split('|'),
 		newStartingPosition = false;
 	if (splint[1]) {
@@ -731,8 +734,7 @@ vars.loadMap = function(name) {
 			y: Math.floor(newStartingPosition[0])
 		};
 	}
-
-	Tools.getScript("./maps/" + name, function(data) {
+	function loadMap(data) {
 		var data = data.split('\n');
 		var name = data[0].split(':')[1],
 			minMonLevel = Math.floor(data[1].split(':')[1]),
@@ -767,7 +769,8 @@ vars.loadMap = function(name) {
 		img.onload = function() {
 			$("#players").width($(img).width()).height($(img).height());
 		};
-		$('.mapimg').remove();
+		$('.player').show();
+		mapImg.remove();
 		var div = $('<div class="mapimg" />');
 		div.width($("#map").width()).height($("#map").height()).css({
 			'background': 'url("./maps/' + id + '.png") 0px 0px'
@@ -797,6 +800,10 @@ vars.loadMap = function(name) {
 			}
 		}
 		vars.focusCamera();
+	}
+	Tools.getScript("./maps/" + name, function(data) {
+		var t2 = new Date() / 1;
+		if (t2 - t1 >= 1000) loadMap(data); setTimeout(function() {loadMap(data);}, 1000 - (t2 - t1));
 	});
 };
 vars.addMessage = function(name, message) {

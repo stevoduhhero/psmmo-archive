@@ -365,6 +365,7 @@ a.closeX {
 	left: 50%;
 	top: 50%;
 	background: #5c5cff;
+	background-image: linear-gradient(30deg, #5c5cff, #b7c9cd);
 	width: 547px;
 	height: 368px;
 	z-index: 4;
