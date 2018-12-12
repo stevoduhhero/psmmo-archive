@@ -54,32 +54,36 @@ vars.init = function() {
 		vars.focusedInput = false;
 		if (!rp.hasClass('focused')) rp.scrollTop(0);
 	}).on("click", "#teamOrder div", function() {
-		//make $(#teamOrder div).dblclik work on mobile
+		var clickTimeout, dblclick = false, cutoff = 500, self = this; //for mobile
 		if (vars.touchtime === 0 || vars.touchtime === undefined) {
 			vars.touchtime = new Date().getTime();
 		} else {
-			if (((new Date().getTime()) - vars.touchtime) < 500) {
+			if (((new Date().getTime()) - vars.touchtime) < cutoff) {
 				// double click occurred
-				vars.dblclickIcon(this);
+				dblclick = true;
 				vars.touchtime = 0;
-				$(".selected").removeClass("selected");
-			} else {
-				// not a double click so set as a new first click
-				vars.touchtime = new Date().getTime();
-			}
+			} else vars.touchtime = new Date().getTime(); // not a double click so set as a new first click
 		}
 
 		if (this.id == $("#teamOrder .selected").attr("id")) {
 			$(this).removeClass("selected");
-		} else {
-			if (!$("#teamOrder .selected").length) $(this).addClass("selected"); else {
-				var first = Math.floor($(".selected").attr('id')),
-					second = Math.floor(this.id);
-				var firstMonCached = jQuery.extend(true, {}, vars.team[first]);
-				vars.team[first] = vars.team[second];
-				vars.team[second] = firstMonCached;
-				vars.updateTeamOrder();
-			}
+		} else if (!dblclick) {
+			clickTimeout = setTimeout(function() {
+				if (!$("#teamOrder .selected").length) $(self).addClass("selected"); else {
+					var first = Math.floor($(".selected").attr('id')),
+						second = Math.floor(self.id);
+					var firstMonCached = jQuery.extend(true, {}, vars.team[first]);
+					vars.team[first] = vars.team[second];
+					vars.team[second] = firstMonCached;
+					vars.updateTeamOrder();
+				}
+			}, cutoff);
+		}
+
+		if (dblclick) {
+			clearTimeout(clickTimeout);
+			vars.dblclickIcon(this);
+			$(".selected").removeClass("selected");
 		}
 	}).on("click", "#box div", function() {
 		var msg = "",
