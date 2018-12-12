@@ -29,3 +29,6 @@ Bot
 -----
 - Change its name on client @ vars.js - vars.wildPokemonBot
 - Change its name on server @ bot.js - bot.name
+
+Don't forget to run the command below on your server, otherwise nothing will work.
+ /makechatroom psmmo
