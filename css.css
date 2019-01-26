@@ -263,7 +263,7 @@ a.closeX {
 	text-align: right;
 }
 .ps-room-opaque {
-	width: 900px;
+	width: 640px; /* 900px for chat */
 	height: 515px;
 	background: rgba(255, 255, 255, 0.5) !important;
 	position: absolute;
@@ -274,6 +274,7 @@ a.closeX {
 	outline: 1px solid rgb(179, 179, 179);
 	z-index: 3;
 }
+.ps-room .battle-controls {background: none;}
 .battle-log {
 	background: rgba(255, 255, 255, 0.6);
 }
