@@ -10,7 +10,7 @@
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/battle.css" />
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/utilichart.css" />
 		<link rel="stylesheet" href="//play.pokemonshowdown.com/style/font-awesome.css" />
-		<link rel="stylesheet" href="./css.css" />
+		<link rel="stylesheet" href="./css.css?v=1.2" />
 		<script src="//play.pokemonshowdown.com/js/lib/jquery-2.1.4.min.js"></script>
 		<script src="//play.pokemonshowdown.com/js/lib/jquery-cookie.js"></script>
 		<script src="//play.pokemonshowdown.com/js/lib/autoresize.jquery.min.js"></script>
@@ -44,7 +44,7 @@
 		<script src="//play.pokemonshowdown.com/js/client-battle-tooltips.js"></script>
 		<script src="./vars.js"></script>
 		<script src="./helpers.js"></script>
-		<script src="./main.js"></script>
+		<script src="./main.js?v=1.1"></script>
 		<style id="battleZoom">.ps-room-opaque {}</style>
 		<!-- Global site tag (gtag.js) - Google Analytics -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-125398472-2"></script>
@@ -83,12 +83,6 @@
 			<button onclick="vars.saveGame();">Save Game</button><button onclick="vars.openBag();">Open Bag</button>
 			<div id="teamOrder"></div>
 			<input type="text" id="invisitype" placeholder="Message..." />
-			<hr />
-			<div ontouchmove="event.preventDefault();" id="joystick" style="background: white linear-gradient(0deg, #818f3e, #e3c785);height: 150px;position: relative;width: 100%;">
-				<div style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 150px;height: 150px;margin-top: -75px;margin-left: -75px;background: #b6b6b6;box-shadow: 0 0 0 5px #b1b1b1;"></div>
-				<div style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 75px;height: 75px;margin-top: -37.5px;margin-left: -37.5px;background: #b1b1b1;box-shadow: 0px 0px 10px 5px rgb(153, 152, 152);"></div>
-				<div id="centro" style="top: 50%;left: 50%;border-radius: 100px;position: absolute;width: 75px;height: 75px;margin-top: -37.5px;margin-left: -37.5px;background: rgb(199, 199, 199);box-shadow: 0px 0px 0px 1px rgb(153, 152, 152);font-size: 12px;text-align: center;line-height: 64px;color: white;text-shadow: black 1px 1px 1px;cursor: pointer;">JOYSTICK</div>
-			</div>
 			<hr />
 			<ul>
 				<h2><a href="https://psmmo.000webhostapp.com/forums/" target="_BLANK">Forums for PSmmo</a></h2>

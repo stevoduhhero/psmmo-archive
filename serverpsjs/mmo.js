@@ -4,7 +4,7 @@ function Map(name) {
 	this.users = {};
 	return this;
 }
-Map.prototype.join = function(user, connection) {	
+Map.prototype.join = function(user, connection) {
 	const userid = toId(user.name);
 	if (user.map) user.map.leave(user);
 	user.map = this;
@@ -59,7 +59,7 @@ maps.mergeGuests = function(user) {
 	user.setNamed = false;
 	let u, nonGuests = user.getAltUsers(true), allAlts = user.getAltUsers(true);
 	let name = user.name;
-	
+
 	//remove bot & guests from nonGuests
 	for (let i = 0; i < nonGuests.length; i++) {
 		u = nonGuests[i];
@@ -70,13 +70,13 @@ maps.mergeGuests = function(user) {
 			i--;
 		}
 	}
-	
+
 	if (nonGuests !== null && nonGuests.length) name = nonGuests[0].name;
 	let newUser = Users.get(toId(name));
 	if (nonGuests === null || !nonGuests.length) nonGuests = [newUser];
-	
+
 	if (newUser.userid.startsWith("guest")) return;
-	
+
 	if (newUser.userid !== user.userid) {
 		user.merge(newUser);
 		Users.merge(user, newUser);
@@ -95,7 +95,7 @@ maps.mergeGuests = function(user) {
 };
 maps.setup = function(commands) {
 	Dex.data.Formats.psmmo = {name: "psmmo", mod: 'gen7', ruleset: ['Pokemon'], searchShow: false};
-	
+
 	//commands that are being replaced from chat-commands.js
 	maps.commands.join = (function(target, room, user, connection) {
 		var cached_function = commands.join;
@@ -137,7 +137,7 @@ maps.setup = function(commands) {
 			return result;
 		};
 	})();
-	
+
 	for (let i in maps.commands) commands[i] = maps.commands[i];
 	return maps;
 };
@@ -169,17 +169,17 @@ maps.commands.mmo = function(target, room, user, connection, cmd) {
 		mapObj.y = msg[2];
 		user.map.emit('|s|' + userid + '|' + mapObj.x + '|' + mapObj.y, user);
 	}
-	if (type === "encounter") {		
+	if (type === "encounter") {
 		//generate pokemon
 		const team = [bot.generateMon(msg[1], msg[2])];
 		bot.user.team = Dex.packTeam(team);
 		mapObj.pokemon = team;
-		
+
 		//update coordinates
 		mapObj.x = msg[3];
 		mapObj.y = msg[4];
 		user.map.emit('|s|' + userid + '|' + mapObj.x + '|' + mapObj.y, user);
-		
+
 		//createBattle
 		let formatid = "psmmo";
 		let options = {
@@ -201,8 +201,8 @@ maps.commands.mmo = function(target, room, user, connection, cmd) {
 		if (p2) p2.joinRoom(room);
 		if (p1) Monitor.countBattle(p1.latestIp, p1.name);
 		if (p2) Monitor.countBattle(p2.latestIp, p2.name);
-		
-		bot.addBattle(room);		
+
+		bot.addBattle(room);
 	}
 	if (type === "catchpokemon") {
 		//msg[1] = monId

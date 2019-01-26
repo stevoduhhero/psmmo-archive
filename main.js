@@ -463,7 +463,7 @@ vars.resize = function(keyboardResize) {
 			}, 0);
 		} else return; //viewport changes w/ keyboard (depends on browser) & makes battles super tiny
 	}
-	vars.battleCSS = {height: 515, width: 901};
+	vars.battleCSS = {height: 515, width: 641}; //fullscreen(chat) = 941
 	//if battles bigger than screen, shrink battles
 	function zoom(num) {
 		$("#battleZoom").html(".ps-room-opaque {transform: scale(" + ((95 + num) / 100) + ");transform-origin: right bottom;-ms-transform: scale("+((95+num)/100)+");-ms-transform-origin: right bottom;}");
