@@ -766,7 +766,7 @@ vars.loadMap = function(name) {
 		};
 
 		var img = new Image();
-		img.src = './maps/' + id + '.png';
+		img.src = './maps/' + id + '.jpg';
 		img.onload = function() {
 			$("#players").width($(img).width()).height($(img).height());
 		};
@@ -774,7 +774,7 @@ vars.loadMap = function(name) {
 		mapImg.remove();
 		var div = $('<div class="mapimg" />');
 		div.width($("#map").width()).height($("#map").height()).css({
-			'background': 'url("./maps/' + id + '.png") 0px 0px'
+			'background': 'url("./maps/' + id + '.jpg") 0px 0px'
 		}).appendTo('#container');
 		vars.map = new Array();
 		for (var y in data) {
