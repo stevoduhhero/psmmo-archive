@@ -74,7 +74,7 @@ alerty = function(msg, info, type) {
 	}
 	closeByClick = ((!info) ? ' onclick="closeAlerty(' + t + ');"' : '');
 	$('body').prepend('\
-	<div id="daddy' + t + '"' + closeByClick + ' style="' + (closeByClick ? 'cursor: pointer;' : '') + 'position: absolute;top: 0;left: 0;width: 100%;height: 100%;background: white;opacity: 0.5;z-index: 9999;"></div>\
+	<div id="daddy' + t + '"' + closeByClick + ' style="' + (closeByClick ? 'cursor: pointer;' : '') + 'position: absolute;top: 0;left: 0;width: 100%;height: 100%;background: white;opacity: 0.23;z-index: 9999;"></div>\
 	<div id="baby' + t + '" style="width: 500px;height: 150px;margin-left: -250px;margin-top: -75px;position: absolute;top: 50%;left: 50%;background: white;outline: 2px solid rgb(175, 175, 171);z-index: 9999;">\
 	<div style="padding: 10px;font-size: 20px;text-align: center;">' + msg + ((info) ? addInputs : '') + '</div>\
 	</div>\

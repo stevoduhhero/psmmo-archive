@@ -1326,6 +1326,8 @@ vars.getStat = function (stat, set, evOverride, natureOverride) {
 
 
 /* showdownish stuff */
+vars.updateTitle = function (room) {document.title = room.title ? room.title + " - Showdown!" : "Showdown!";};
+vars.roomTitleChanged = function (room) {if (room.id === this.fragment) this.updateTitle(room);};
 vars.send = function (data, room, mapThing) {
 	if (mapThing && Object.keys(vars.players).length === 1) return; //user is alone, no need to send updates
 	if (room && room !== 'lobby' && room !== true) {

@@ -9,26 +9,22 @@
 		initialize: function (data) {
 			this.me = {};
 
-			this.battlePaused = false;
-
-			this.isSideRoom = Dex.prefs('rightpanelbattles');
+			this.isSideRoom = Tools.prefs('rightpanelbattles');
+			
 			//mmo changed original line
-			this.$el.addClass('ps-room-opaque').html('<div id="exp' + this.id + '" class="expbar"></div><div class="exitButton" onclick="vars.send(\'/leave ' + this.id + '\');">x</div><div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log" aria-label="Battle Log" role="complementary"></div><div class="battle-log-add">Connecting...</div><ul class="battle-userlist userlist userlist-minimized"></ul><div class="battle-controls" role="complementary" aria-label="Battle Controls"></div><button class="battle-chat-toggle button" name="showChat"><i class="fa fa-caret-left"></i> Chat</button>');
-
+			this.$el.addClass('ps-room-opaque').html('<div id="exp' + this.id + '" class="expbar"></div><div class="exitButton" onclick="vars.send(\'/leave ' + this.id + '\');">x</div><div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log"></div><div class="battle-log-add">Connecting...</div><div class="battle-controls"></div>');
 			this.$battle = this.$el.find('.battle');
 			this.$controls = this.$el.find('.battle-controls');
 			this.$chatFrame = this.$el.find('.battle-log');
 			this.$chatAdd = this.$el.find('.battle-log-add');
+			this.$join = null;
 			this.$foeHint = this.$el.find('.foehint');
 
-			BattleSound.setMute(Dex.prefs('mute'));
+			BattleSound.setMute(Tools.prefs('mute'));
 			this.battle = new Battle(this.$battle, this.$chatFrame, this.id);
-			this.battle.dex = Dex; //mmo add line
-			this.tooltips = this.battle.scene.tooltips;
-			this.tooltips.listen(this.$controls);
+			this.tooltips = new BattleTooltips(this.battle, this);
 
 			this.battle.roomid = this.id;
-			this.battle.joinButtons = true;
 			this.users = {};
 			this.userCount = {users: 0};
 			this.$userList = this.$('.userlist');
@@ -39,10 +35,10 @@
 			this.userList.construct();
 
 			this.$chat = this.$chatFrame.find('.inner');
-
+			
 			//mmo change line, open bag onclick "battle options" button
 			//&& comment out bcos "optionsElem" undefined after battle.js update
-			//line: this.$options = this.battle.scene.$options.html('<div style="padding-top: 3px; padding-right: 3px; text-align: right"><button class="icon button" name="openBattleOptions" title="Options">Battle Options</button></div>');
+			//line: this.$options = this.battle.optionsElem.html('<div style="padding-top: 3px; padding-right: 3px; text-align: right"><button class="icon button" name="openBattleOptions" title="Options" onclick="vars.openBag();">Bag || Options</button></div>');
 
 			var self = this;
 			this.battle.customCallback = function () { self.updateControls(); };
@@ -57,7 +53,7 @@
 			this.battle.$expEl.css("width", "0px");
 
 			this.battle.play();
-
+			
 			//mmo add line - battle link
 			var self = this;
 			setTimeout(function() {
@@ -123,9 +119,9 @@
 		},
 		focus: function () {
 			this.tooltips.hideTooltip();
-			if (this.battle.playbackState === 3 && !this.battlePaused) {
+			if (this.battle.playbackState === 3) {
 				this.battle.play();
-				if (Dex.prefs('noanim')) this.battle.fastForwardTo(-1);
+				if (Tools.prefs('noanim')) this.battle.fastForwardTo(-1);
 			}
 			ConsoleRoom.prototype.focus.call(this);
 		},
@@ -138,12 +134,10 @@
 			if (log.length && log[0].substr(0, 7) === '|title|') {
 				this.title = log[0].substr(7);
 				log.shift();
-				vars.roomTitleChanged(this);
 			}
 			if (this.battle.activityQueue.length) return;
 			this.battle.activityQueue = log;
 			this.battle.fastForwardTo(-1);
-			this.battle.play();
 			if (this.battle.ended) this.battleEnded = true;
 			this.updateLayout();
 			this.updateControls();
@@ -182,7 +176,7 @@
 				}
 
 				try {
-					requestData = JSON.parse(data);
+					requestData = $.parseJSON(data);
 				} catch (err) {}
 				return this.receiveRequest(requestData, choiceText);
 			}
@@ -209,7 +203,7 @@
 					switch (args[0]) {
 					case 'trapped':
 						requestData.trapped = true;
-						var pokeName = pokemon.side.n === 0 ? BattleLog.escapeHTML(pokemon.name) : "The opposing " + (this.battle.ignoreOpponent || this.battle.ignoreNicks ? pokemon.species : BattleLog.escapeHTML(pokemon.name));
+						var pokeName = pokemon.side.n === 0 ? Tools.escapeHTML(pokemon.name) : "The opposing " + (this.battle.ignoreOpponent || this.battle.ignoreNicks ? pokemon.species : Tools.escapeHTML(pokemon.name));
 						this.battle.activityQueue.push('|message|' + pokeName + ' is trapped and cannot switch!');
 						break;
 					case 'cant':
@@ -226,13 +220,13 @@
 				} else if (logLine.substr(0, 5) === '|win|' || logLine === '|tie') {
 					this.battleEnded = true;
 					this.battle.activityQueue.push(logLine);
-				} else if (logLine.substr(0, 6) === '|chat|' || logLine.substr(0, 3) === '|c|' || logLine.substr(0, 4) === '|c:|' || logLine.substr(0, 9) === '|chatmsg|' || logLine.substr(0, 10) === '|inactive|') {
+				} else if (logLine.substr(0, 6) === '|chat|' || logLine.substr(0, 3) === '|c|' || logLine.substr(0, 9) === '|chatmsg|' || logLine.substr(0, 10) === '|inactive|') {
 					this.battle.instantAdd(logLine);
 				} else {
 					this.battle.activityQueue.push(logLine);
 				}
 			}
-			this.battle.add('', Dex.prefs('noanim'));
+			this.battle.add('', Tools.prefs('noanim'));
 			this.updateControls();
 		},
 		toggleMessages: function (user) {
@@ -264,6 +258,11 @@
 		 *********************************************************/
 
 		updateControls: function (force) {
+			if (this.$join) {
+				this.$join.remove();
+				this.$join = null;
+			}
+
 			var controlsShown = this.controlsShown;
 			this.controlsShown = false;
 
@@ -276,15 +275,11 @@
 			} else if (this.battle.playbackState === 2 || this.battle.playbackState === 3) {
 
 				// battle is playing or paused
-				if (!this.side || this.battleEnded) {
+				if (!this.side) {
 					// spectator
-					if (this.battle.paused) {
-						// paused
-						this.$controls.html('<p><button class="button" name="resume"><i class="fa fa-play"></i><br />Play</button> <button class="button" name="rewindTurn"><i class="fa fa-step-backward"></i><br />Last turn</button><button class="button" name="skipTurn"><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button" name="instantReplay"><i class="fa fa-undo"></i><br />First turn</button><button class="button" name="goToEnd"><i class="fa fa-fast-forward"></i><br />Skip to end</button></p><p><button name="switchSides"><i class="fa fa-random"></i> Switch sides</button></p>');
-					} else {
-						// playing
-						this.$controls.html('<p><button class="button" name="pause"><i class="fa fa-pause"></i><br />Pause</button> <button class="button" name="rewindTurn"><i class="fa fa-step-backward"></i><br />Last turn</button><button class="button" name="skipTurn"><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button" name="instantReplay"><i class="fa fa-undo"></i><br />First turn</button><button class="button" name="goToEnd"><i class="fa fa-fast-forward"></i><br />Skip to end</button></p><p><button name="switchSides"><i class="fa fa-random"></i> Switch sides</button></p>');
-					}
+					this.$controls.html('<p><button class="button" name="instantReplay"><i class="fa fa-undo"></i><br />First turn</button> <button class="button" name="rewindTurn"><i class="fa fa-step-backward"></i><br />Last turn</button><button class="button" name="skipTurn"><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button" name="goToEnd"><i class="fa fa-fast-forward"></i><br />Skip to end</button></p><p><button name="switchSides"><i class="fa fa-random"></i> Switch sides</button></p>');
+				} else if (this.battleEnded) {
+					this.$controls.html('<p><button class="button" name="instantReplay"><i class="fa fa-undo"></i><br />First turn</button> <button class="button" name="rewindTurn"><i class="fa fa-step-backward"></i><br />Last turn</button><button class="button" name="skipTurn"><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button" name="goToEnd"><i class="fa fa-fast-forward"></i><br />Skip to end</button></p>');
 				} else {
 					// is a player
 					this.$controls.html('<p>' + this.getTimerHTML() + '<button class="button" name="skipTurn"><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button" name="goToEnd"><i class="fa fa-fast-forward"></i><br />Skip to end</button></p>');
@@ -317,31 +312,30 @@
 					this.updateTimer();
 				}
 
-			} else if (!this.battle.mySide.name || !this.battle.yourSide.name) {
+			} else if (!this.battle.mySide.initialized || !this.battle.yourSide.initialized) {
 
 				// empty battle
 				this.$controls.html('<p><em>Waiting for players...</em></p>');
+				this.$join = $('<div class="playbutton"><button name="joinBattle">Join Battle</button></div>');
+				this.$battle.append(this.$join);
 
 			} else {
 
 				// full battle
-				if (this.battle.paused) {
-					// paused
-					this.$controls.html('<p><button class="button" name="resume"><i class="fa fa-play"></i><br />Play</button> <button class="button" name="rewindTurn"><i class="fa fa-step-backward"></i><br />Last turn</button><button class="button disabled" disabled><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button" name="instantReplay"><i class="fa fa-undo"></i><br />First turn</button><button class="button disabled" disabled><i class="fa fa-fast-forward"></i><br />Skip to end</button></p><p><button name="switchSides"><i class="fa fa-random"></i> Switch sides</button></p><p><em>Waiting for players...</em></p>');
-				} else {
-					// playing
-					this.$controls.html('<p><button class="button" name="pause"><i class="fa fa-pause"></i><br />Pause</button> <button class="button" name="rewindTurn"><i class="fa fa-step-backward"></i><br />Last turn</button><button class="button disabled" disabled><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button" name="instantReplay"><i class="fa fa-undo"></i><br />First turn</button><button class="button disabled" disabled><i class="fa fa-fast-forward"></i><br />Skip to end</button></p><p><button name="switchSides"><i class="fa fa-random"></i> Switch sides</button></p><p><em>Waiting for players...</em></p>');
-				}
+				this.$controls.html('<p><button class="button" name="instantReplay"><i class="fa fa-undo"></i><br />First turn</button> <button class="button" name="rewindTurn"><i class="fa fa-step-backward"></i><br />Last turn</button><button class="button disabled" disabled><i class="fa fa-step-forward"></i><br />Skip turn</button> <button class="button disabled" disabled><i class="fa fa-fast-forward"></i><br />Skip to end</button></p><p><button name="switchSides"><i class="fa fa-random"></i> Switch sides</button></p><p><em>Waiting for players...</em></p>');
 
 			}
 
 			// This intentionally doesn't happen if the battle is still playing,
 			// since those early-return.
-			vars.topbar.updateTabbar();
 		},
 		controlsShown: false,
 		updateControlsForPlayer: function () {
+			var battle = this.battle;
+
 			this.callbackWaiting = true;
+			var active = this.battle.mySide.active[0];
+			if (!active) active = {};
 
 			var act = '';
 			var switchables = [];
@@ -351,7 +345,7 @@
 
 				act = this.request.requestType;
 				if (this.request.side) {
-					switchables = this.battle.myPokemon;
+					switchables = this.myPokemon;
 				}
 				if (!this.finalDecision) this.finalDecision = !!this.request.noCancel;
 			}
@@ -367,7 +361,7 @@
 			// this.choice.choices = array of choice strings
 			// this.choice.switchFlags = dict of pokemon indexes that have a switch pending
 			// this.choice.switchOutFlags = ???
-			// this.choice.freedomDegrees = in a switch request: number of empty slots that can't be replaced
+			// this.choice.freedomDegrees = in a switch request: number of Pokemon that can't switch
 			// this.choice.type = determines what the current choice screen to be displayed is
 			// this.choice.waiting = true if the choice has been sent and we're just waiting for the next turn
 
@@ -424,8 +418,8 @@
 					}
 					// Request full team order if one of our PokÃ©mon has Illusion
 					for (var i = 0; i < switchables.length && i < 6; i++) {
-						if (toID(switchables[i].baseAbility) === 'illusion') {
-							this.choice.count = this.battle.myPokemon.length;
+						if (toId(switchables[i].baseAbility) === 'illusion') {
+							this.choice.count = this.myPokemon.length;
 						}
 					}
 					if (this.battle.teamPreviewCount) {
@@ -466,8 +460,7 @@
 				}, 1000);
 			} else if (this.battle.kickingInactive > 1) {
 				this.battle.kickingInactive--;
-				if (this.battle.graceTimeLeft) this.battle.graceTimeLeft--;
-				else if (this.battle.totalTimeLeft) this.battle.totalTimeLeft--;
+				if (this.battle.totalTimeLeft) this.battle.totalTimeLeft--;
 			}
 
 			if (this.battle.kickingInactive) {
@@ -510,7 +503,7 @@
 			//app.addPopup(TimerPopup, {room: this});
 		},
 		updateMoveControls: function (type) {
-			var switchables = this.request && this.request.side ? this.battle.myPokemon : [];
+			var switchables = this.request && this.request.side ? this.myPokemon : [];
 
 			if (type !== 'movetarget') {
 				while (switchables[this.choice.choices.length] && switchables[this.choice.choices.length].fainted && this.choice.choices.length + 1 < this.battle.mySide.active.length) {
@@ -531,7 +524,7 @@
 			var canUltraBurst = curActive.canUltraBurst || switchables[pos].canUltraBurst;
 			if (canZMove && typeof canZMove[0] === 'string') {
 				canZMove = _.map(canZMove, function (move) {
-					return {move: move, target: Dex.getMove(move).target};
+					return {move: move, target: Tools.getMove(move).target};
 				});
 			}
 
@@ -561,7 +554,6 @@
 
 				for (var i = yourActive.length - 1; i >= 0; i--) {
 					var pokemon = yourActive[i];
-					var tooltipArgs = 'activepokemon|1|' + i;
 
 					var disabled = false;
 					if (moveTarget === 'adjacentAlly' || moveTarget === 'adjacentAllyOrSelf') {
@@ -573,14 +565,13 @@
 					if (disabled) {
 						targetMenus[0] += '<button disabled="disabled"></button> ';
 					} else if (!pokemon || pokemon.fainted) {
-						targetMenus[0] += '<button name="chooseMoveTarget" value="' + (i + 1) + '"><span class="picon" style="' + Dex.getPokemonIcon('missingno') + '"></span></button> ';
+						targetMenus[0] += '<button name="chooseMoveTarget" value="' + (i + 1) + '"><span class="picon" style="' + Tools.getPokemonIcon('missingno') + '"></span></button> ';
 					} else {
-						targetMenus[0] += '<button name="chooseMoveTarget" value="' + (i + 1) + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + (this.battle.ignoreOpponent || this.battle.ignoreNicks ? pokemon.species : BattleLog.escapeHTML(pokemon.name)) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
+						targetMenus[0] += '<button name="chooseMoveTarget" value="' + (i + 1) + '"' + this.tooltips.tooltipAttrs("your" + i, 'pokemon', true) + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + (this.battle.ignoreOpponent || this.battle.ignoreNicks ? pokemon.species : Tools.escapeHTML(pokemon.name)) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
 					}
 				}
 				for (var i = 0; i < myActive.length; i++) {
 					var pokemon = myActive[i];
-					var tooltipArgs = 'activepokemon|0|' + i;
 
 					var disabled = false;
 					if (moveTarget === 'adjacentFoe') {
@@ -593,9 +584,9 @@
 					if (disabled) {
 						targetMenus[1] += '<button disabled="disabled" style="visibility:hidden"></button> ';
 					} else if (!pokemon || pokemon.fainted) {
-						targetMenus[1] += '<button name="chooseMoveTarget" value="' + (-(i + 1)) + '"><span class="picon" style="' + Dex.getPokemonIcon('missingno') + '"></span></button> ';
+						targetMenus[1] += '<button name="chooseMoveTarget" value="' + (-(i + 1)) + '"><span class="picon" style="' + Tools.getPokemonIcon('missingno') + '"></span></button> ';
 					} else {
-						targetMenus[1] += '<button name="chooseMoveTarget" value="' + (-(i + 1)) + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
+						targetMenus[1] += '<button name="chooseMoveTarget" value="' + (-(i + 1)) + '"' + this.tooltips.tooltipAttrs(i, 'sidepokemon') + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
 					}
 				}
 
@@ -609,30 +600,28 @@
 			} else {
 				// Move chooser
 				var hpBar = '<small class="' + (hpRatio < 0.2 ? 'critical' : hpRatio < 0.5 ? 'weak' : 'healthy') + '">HP ' + switchables[pos].hp + '/' + switchables[pos].maxhp + '</small>';
-				requestTitle += ' What will <strong>' + BattleLog.escapeHTML(switchables[pos].name) + '</strong> do? ' + hpBar;
+				requestTitle += ' What will <strong>' + Tools.escapeHTML(switchables[pos].name) + '</strong> do? ' + hpBar;
 
 				var hasMoves = false;
 				var moveMenu = '';
 				var movebuttons = '';
-				var typeValueTracker = new ModifiableValue(this.battle, this.battle.mySide.active[pos], this.battle.myPokemon[pos]);
 				for (var i = 0; i < curActive.moves.length; i++) {
 					var moveData = curActive.moves[i];
-					var move = this.battle.dex.getMove(moveData.move);
+					var move = Tools.getMove(moveData.move);
 					var name = move.name;
 					var pp = moveData.pp + '/' + moveData.maxpp;
 					if (!moveData.maxpp) pp = '&ndash;';
 					if (move.id === 'Struggle' || move.id === 'Recharge') pp = '&ndash;';
 					if (move.id === 'Recharge') move.type = '&ndash;';
 					if (name.substr(0, 12) === 'Hidden Power') name = 'Hidden Power';
-					var moveType = this.tooltips.getMoveType(move, typeValueTracker)[0];
-					var tooltipArgs = 'move|' + moveData.move + '|' + pos;
+					var moveType = this.tooltips.getMoveType(move, this.battle.mySide.active[pos] || this.myPokemon[pos]);
 					if (moveData.disabled) {
-						movebuttons += '<button disabled="disabled" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '">';
+						movebuttons += '<button disabled="disabled"' + this.tooltips.tooltipAttrs(moveData.move, 'move') + '>';
 					} else {
-						movebuttons += '<button class="type-' + moveType + ' has-tooltip" name="chooseMove" value="' + (i + 1) + '" data-move="' + BattleLog.escapeHTML(moveData.move) + '" data-target="' + BattleLog.escapeHTML(moveData.target) + '" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '">';
+						movebuttons += '<button class="type-' + moveType + '" name="chooseMove" value="' + (i + 1) + '" data-move="' + Tools.escapeHTML(moveData.move) + '" data-target="' + Tools.escapeHTML(moveData.target) + '"' + this.tooltips.tooltipAttrs(moveData.move, 'move') + '>';
 						hasMoves = true;
 					}
-					movebuttons += name + '<br /><small class="type">' + (moveType ? Dex.getType(moveType).name : "Unknown") + '</small> <small class="pp">' + pp + '</small>&nbsp;</button> ';
+					movebuttons += name + '<br /><small class="type">' + (moveType ? Tools.getType(moveType).name : "Unknown") + '</small> <small class="pp">' + pp + '</small>&nbsp;</button> ';
 				}
 				if (!hasMoves) {
 					moveMenu += '<button class="movebutton" name="chooseMove" value="0" data-move="Struggle" data-target="randomNormal">Struggle<br /><small class="type">Normal</small> <small class="pp">&ndash;</small>&nbsp;</button> ';
@@ -641,12 +630,11 @@
 						movebuttons = '<div class="movebuttons-noz">' + movebuttons + '</div><div class="movebuttons-z" style="display:none">';
 						for (var i = 0; i < curActive.moves.length; i++) {
 							var moveData = curActive.moves[i];
-							var move = this.battle.dex.getMove(moveData.move);
-							var moveType = this.tooltips.getMoveType(move, typeValueTracker)[0];
+							var move = Tools.getMove(moveData.move);
+							var moveType = this.tooltips.getMoveType(move, this.battle.mySide.active[pos] || this.myPokemon[pos]);
 							if (canZMove[i]) {
-								var tooltipArgs = 'zmove|' + move.id + '|' + pos;
-								movebuttons += '<button class="type-' + moveType + ' has-tooltip" name="chooseMove" value="' + (i + 1) + '" data-move="' + BattleLog.escapeHTML(canZMove[i].move) + '" data-target="' + BattleLog.escapeHTML(canZMove[i].target) + '" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '">';
-								movebuttons += canZMove[i].move + '<br /><small class="type">' + (moveType ? Dex.getType(moveType).name : "Unknown") + '</small> <small class="pp">1/1</small>&nbsp;</button> ';
+								movebuttons += '<button class="type-' + moveType + '" name="chooseMove" value="' + (i + 1) + '" data-move="' + Tools.escapeHTML(canZMove[i].move) + '" data-target="' + Tools.escapeHTML(canZMove[i].target) + '"' + this.tooltips.tooltipAttrs(moveData.move, 'zmove') + '>';
+								movebuttons += canZMove[i].move + '<br /><small class="type">' + (moveType ? Tools.getType(moveType).name : "Unknown") + '</small> <small class="pp">1/1</small>&nbsp;</button> ';
 							} else {
 								movebuttons += '<button disabled="disabled">&nbsp;</button>';
 							}
@@ -686,11 +674,10 @@
 					for (var i = 0; i < switchables.length; i++) {
 						var pokemon = switchables[i];
 						pokemon.name = pokemon.ident.substr(4);
-						var tooltipArgs = 'switchpokemon|' + i;
 						if (pokemon.fainted || i < this.battle.mySide.active.length || this.choice.switchFlags[i]) {
-							switchMenu += '<button class="disabled has-tooltip" name="chooseDisabled" value="' + BattleLog.escapeHTML(pokemon.name) + (pokemon.fainted ? ',fainted' : i < this.battle.mySide.active.length ? ',active' : '') + '" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + (pokemon.hp ? '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
+							switchMenu += '<button class="disabled" name="chooseDisabled" value="' + Tools.escapeHTML(pokemon.name) + (pokemon.fainted ? ',fainted' : i < this.battle.mySide.active.length ? ',active' : '') + '"' + this.tooltips.tooltipAttrs(i, 'sidepokemon') + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + (pokemon.hp ? '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
 						} else {
-							switchMenu += '<button name="chooseSwitch" value="' + i + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
+							switchMenu += '<button name="chooseSwitch" value="' + i + '"' + this.tooltips.tooltipAttrs(i, 'sidepokemon') + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
 						}
 					}
 					if (this.finalDecisionSwitch && this.battle.gen > 2) {
@@ -721,7 +708,7 @@
 				}
 			}
 
-			var switchables = this.request && this.request.side ? this.battle.myPokemon : [];
+			var switchables = this.request && this.request.side ? this.myPokemon : [];
 			var myActive = this.battle.mySide.active;
 
 			var requestTitle = '';
@@ -735,14 +722,13 @@
 				requestTitle += "Which PokÃ©mon will it switch in for?";
 				var controls = '<div class="switchmenu" style="display:block">';
 				for (var i = 0; i < myActive.length; i++) {
-					var pokemon = this.battle.myPokemon[i];
-					var tooltipArgs = 'switchpokemon|' + i;
+					var pokemon = this.myPokemon[i];
 					if (pokemon && !pokemon.fainted || this.choice.switchOutFlags[i]) {
-						controls += '<button disabled class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + (!pokemon.fainted ? '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
+						controls += '<button disabled' + this.tooltips.tooltipAttrs(i, 'sidepokemon') + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + (!pokemon.fainted ? '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
 					} else if (!pokemon) {
 						controls += '<button disabled></button> ';
 					} else {
-						controls += '<button name="chooseSwitchTarget" value="' + i + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
+						controls += '<button name="chooseSwitchTarget" value="' + i + '"' + this.tooltips.tooltipAttrs(i, 'sidepokemon') + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
 					}
 				}
 				controls += '</div>';
@@ -756,19 +742,18 @@
 				if (this.choice.freedomDegrees >= 1) {
 					requestTitle += "Choose a PokÃ©mon to send to battle!";
 				} else {
-					requestTitle += "Switch <strong>" + BattleLog.escapeHTML(switchables[pos].name) + "</strong> to:";
+					requestTitle += "Switch <strong>" + Tools.escapeHTML(switchables[pos].name) + "</strong> to:";
 				}
 
 				var switchMenu = '';
 				for (var i = 0; i < switchables.length; i++) {
 					var pokemon = switchables[i];
-					var tooltipArgs = 'switchpokemon|' + i;
 					if (pokemon.fainted || i < this.battle.mySide.active.length || this.choice.switchFlags[i]) {
-						switchMenu += '<button class="disabled has-tooltip" name="chooseDisabled" value="' + BattleLog.escapeHTML(pokemon.name) + (pokemon.fainted ? ',fainted' : i < this.battle.mySide.active.length ? ',active' : '') + '" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '">';
+						switchMenu += '<button class="disabled" name="chooseDisabled" value="' + Tools.escapeHTML(pokemon.name) + (pokemon.fainted ? ',fainted' : i < this.battle.mySide.active.length ? ',active' : '') + '"' + this.tooltips.tooltipAttrs(i, 'sidepokemon') + '>';
 					} else {
-						switchMenu += '<button name="chooseSwitch" value="' + i + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '">';
+						switchMenu += '<button name="chooseSwitch" value="' + i + '"' + this.tooltips.tooltipAttrs(i, 'sidepokemon') + '>';
 					}
-					switchMenu += '<span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + (!pokemon.fainted ? '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
+					switchMenu += '<span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + (!pokemon.fainted ? '<span class="hpbar' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
 				}
 
 				var controls = (
@@ -787,7 +772,7 @@
 			}
 		},
 		updateTeamControls: function (type) {
-			var switchables = this.request && this.request.side ? this.battle.myPokemon : [];
+			var switchables = this.request && this.request.side ? this.myPokemon : [];
 			var maxIndex = Math.min(switchables.length, 24);
 
 			var requestTitle = "";
@@ -801,11 +786,10 @@
 			for (var i = 0; i < maxIndex; i++) {
 				var oIndex = this.choice.teamPreview[i] - 1;
 				var pokemon = switchables[oIndex];
-				var tooltipArgs = 'switchpokemon|' + oIndex;
 				if (i < this.choice.done) {
-					switchMenu += '<button disabled="disabled" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '</button> ';
+					switchMenu += '<button disabled="disabled"' + this.tooltips.tooltipAttrs(oIndex, 'sidepokemon') + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + '</button> ';
 				} else {
-					switchMenu += '<button name="chooseTeamPreview" value="' + i + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '</button> ';
+					switchMenu += '<button name="chooseTeamPreview" value="' + i + '"' + this.tooltips.tooltipAttrs(oIndex, 'sidepokemon') + '><span class="picon" style="' + Tools.getPokemonIcon(pokemon) + '"></span>' + Tools.escapeHTML(pokemon.name) + '</button> ';
 				}
 			}
 
@@ -826,7 +810,7 @@
 		updateWaitControls: function () {
 			var buf = '<div class="controls">';
 			buf += this.getPlayerChoicesHTML();
-			if (!this.battle.mySide.name || !this.battle.yourSide.name || !this.request) {
+			if (!this.battle.mySide.initialized || !this.battle.yourSide.initialized || !this.request) {
 				if (this.battle.kickingInactive) {
 					buf += '<p><button class="button" name="setTimer" value="off">Stop timer</button> <small>&larr; Your opponent has disconnected. This will give them more time to reconnect.</small></p>';
 				} else {
@@ -884,10 +868,10 @@
 								}
 							}
 						}
-						buf += 'use ' + Dex.getMove(move).name + (target ? ' against ' + target : '') + '.<br />';
+						buf += 'use ' + Tools.getMove(move).name + (target ? ' against ' + target : '') + '.<br />';
 						break;
 					case 'switch':
-						buf += '' + this.battle.myPokemon[parts[1] - 1].species + ' will switch in';
+						buf += '' + this.myPokemon[parts[1] - 1].species + ' will switch in';
 						if (myActive[i]) {
 							buf += ', replacing ' + myActive[i].species;
 						}
@@ -929,6 +913,7 @@
 				return;
 			}
 			request.requestType = 'move';
+			var notifyObject = null;
 			if (request.forceSwitch) {
 				request.requestType = 'switch';
 			} else if (request.teamPreview) {
@@ -945,7 +930,7 @@
 			this.finalDecision = this.finalDecisionMove = this.finalDecisionSwitch = false;
 			this.request = request;
 			if (request.side) {
-				this.updateSideLocation(request.side);
+				this.updateSideLocation(request.side, true);
 			}
 			this.notifyRequest();
 			this.updateControls(true);
@@ -965,16 +950,16 @@
 				break;
 			}
 		},
-		updateSideLocation: function (sideData) {
+		updateSideLocation: function (sideData, midBattle) {
 			if (!sideData.id) return;
 			this.side = sideData.id;
 			if (this.battle.sidesSwitched !== !!(this.side === 'p2')) {
-				this.battle.switchSides();
+				this.battle.switchSides(!midBattle);
 				this.$chat = this.$chatFrame.find('.inner');
 			}
 		},
 		updateSide: function (sideData) {
-			this.battle.myPokemon = sideData.pokemon;
+			this.myPokemon = sideData.pokemon;
 			for (var i = 0; i < sideData.pokemon.length; i++) {
 				var pokemonData = sideData.pokemon[i];
 				this.battle.parseDetails(pokemonData.ident.substr(4), pokemonData.ident, pokemonData.details, pokemonData);
@@ -984,6 +969,7 @@
 				pokemonData.getFormattedRange = Pokemon.prototype.getFormattedRange;
 				pokemonData.getHPColorClass = Pokemon.prototype.getHPColorClass;
 				pokemonData.getHPColor = Pokemon.prototype.getHPColor;
+				pokemonData.getFullName = Pokemon.prototype.getFullName;
 			}
 		},
 
@@ -1013,10 +999,10 @@
 			filename += (date.getMonth() >= 9 ? '-' : '-0') + (date.getMonth() + 1);
 			filename += (date.getDate() >= 10 ? '-' : '-0') + date.getDate();
 
-			filename += '-' + toID(this.battle.p1.name);
-			filename += '-' + toID(this.battle.p2.name);
+			filename += '-' + toId(this.battle.p1.name);
+			filename += '-' + toId(this.battle.p2.name);
 
-			e.currentTarget.href = BattleLog.createReplayFileHref(this);
+			e.currentTarget.href = Tools.createReplayFileHref(this);
 			e.currentTarget.download = filename + '.html';
 
 			e.stopPropagation();
@@ -1024,22 +1010,9 @@
 		switchSides: function () {
 			this.battle.switchSides();
 		},
-		pause: function () {
-			this.tooltips.hideTooltip();
-			this.battlePaused = true;
-			this.battle.pause();
-			this.updateControls();
-		},
-		resume: function () {
-			this.tooltips.hideTooltip();
-			this.battlePaused = false;
-			this.battle.play();
-			this.updateControls();
-		},
 		instantReplay: function () {
 			this.tooltips.hideTooltip();
 			this.request = null;
-			this.battlePaused = false;
 			this.battle.reset();
 			this.battle.play();
 		},
@@ -1049,6 +1022,7 @@
 		rewindTurn: function () {
 			if (this.battle.turn) {
 				this.battle.fastForwardTo(this.battle.turn - 1);
+				this.battle.play();
 			}
 		},
 		goToEnd: function () {
@@ -1056,14 +1030,6 @@
 		},
 		register: function (userid) {
 			vars.addPopup(RegisterPopup); //mmo changed line
-			//mmo comment all this out
-			/*
-			var registered = app.user.get('registered');
-			if (registered && registered.userid !== userid) registered = false;
-			if (!registered && userid === app.user.get('userid')) {
-				app.addPopup(RegisterPopup);
-			}
-			*/
 		},
 		closeAndMainMenu: function () {
 			this.close();
@@ -1088,8 +1054,10 @@
 				var isZMove = !!(this.$('input[name=zmove]')[0] || '').checked;
 				var isUltraBurst = !!(this.$('input[name=ultraburst]')[0] || '').checked;
 
+				var move = e.getAttribute('data-move');
 				var target = e.getAttribute('data-target');
 				var choosableTargets = {normal: 1, any: 1, adjacentAlly: 1, adjacentAllyOrSelf: 1, adjacentFoe: 1};
+				var spreadTargets = {allAdjacentFoes: 1, allAdjacent: 1};
 
 				this.choice.choices.push('move ' + pos + (isMega ? ' mega' : '') + (isZMove ? ' zmove' : '') + (isUltraBurst ? ' ultra' : ''));
 				if (myActive.length > 1 && target in choosableTargets) {
@@ -1178,17 +1146,16 @@
 			this.endTurn();
 		},
 		chooseDisabled: function (data) {
+			//mmo remove lines
 			this.tooltips.hideTooltip();
-			/*//mmo remove lines
 			data = data.split(',');
 			if (data[1] === 'fainted') {
-				app.addPopupMessage("" + data[0] + " has no energy left to battle!");
+				//app.addPopupMessage("" + data[0] + " has no energy left to battle!");
 			} else if (data[1] === 'active') {
-				app.addPopupMessage("" + data[0] + " is already in battle!");
+				//app.addPopupMessage("" + data[0] + " is already in battle!");
 			} else {
-				app.addPopupMessage("" + data[0] + " is already selected!");
+				//app.addPopupMessage("" + data[0] + " is already selected!");
 			}
-			*/
 		},
 		endChoice: function () {
 			var choiceIndex = this.choice.choices.length - 1;
@@ -1315,7 +1282,7 @@
 				var index3 = html.indexOf('</script>');
 				html = html.slice(0, index3);
 				html = html.replace(/\\\//g, '/');
-				//mmo remove 2 lines
+				//mmo remove lines
 				//app.receive('>battle-uploadedreplay\n|init|battle\n|title|' + title + '\n' + html);
 				//app.receive('>battle-uploadedreplay\n|expire|Uploaded replay');
 			};
@@ -1337,13 +1304,8 @@
 				// game
 				buf += 'Forfeiting makes you lose the game.';
 			}
-			if (this.gameType === 'help') {
-				buf += ' Are you sure?</p><p><label><input type="checkbox" name="closeroom" checked /> Close room</label></p>';
-				buf += '<p><button type="submit"><strong>Close ticket</strong></button> ';
-			} else {
-				buf += ' Are you sure?</p><p><label><input type="checkbox" name="closeroom" checked /> Close after forfeiting</label></p>';
-				buf += '<p><button type="submit"><strong>Forfeit</strong></button> ';
-			}
+			buf += ' Are you sure?</p><p><label><input type="checkbox" name="closeroom" checked /> Close after forfeiting</label></p>';
+			buf += '<p><button type="submit"><strong>Forfeit</strong></button> ';
 			if (this.gameType === 'battle' && this.room.battle && !this.room.battle.rated) {
 				buf += '<button name="replacePlayer">Replace player</button> ';
 			}
@@ -1353,13 +1315,16 @@
 		replacePlayer: function (data) {
 			var room = this.room;
 			var self = this;
-			vars.addPopupPrompt("Replacement player's username", "Replace player", function (target) {
+			/*
+			mmo remove lines
+			app.addPopupPrompt("Replacement player's username", "Replace player", function (target) {
 				if (!target) return;
 				var side = (room.battle.mySide.id === room.battle.p1.id ? 'p1' : 'p2');
 				room.leaveBattle();
 				room.send('/addplayer ' + target + ', ' + side);
 				self.close();
 			});
+			*/
 		},
 		submit: function (data) {
 			this.room.send('/forfeit');
@@ -1381,8 +1346,8 @@
 			buf += '<p><label class="optlabel"><input type="checkbox" name="ignorespects"' + (this.battle.ignoreSpects ? ' checked' : '') + '/> Ignore Spectators</label></p>';
 			buf += '<p><label class="optlabel"><input type="checkbox" name="ignoreopp"' + (this.battle.ignoreOpponent ? ' checked' : '') + '/> Ignore Opponent</label></p>';
 			buf += '<p><strong>All battles</strong></p>';
-			buf += '<p><label class="optlabel"><input type="checkbox" name="ignorenicks"' + (Dex.prefs('ignorenicks') ? ' checked' : '') + ' /> Ignore nicknames</label></p>';
-			if (rightPanelBattlesPossible) buf += '<p><label class="optlabel"><input type="checkbox" name="rightpanelbattles"' + (Dex.prefs('rightpanelbattles') ? ' checked' : '') + ' /> Open new battles on the right side</label></p>';
+			buf += '<p><label class="optlabel"><input type="checkbox" name="ignorenicks"' + (Tools.prefs('ignorenicks') ? ' checked' : '') + ' /> Ignore nicknames</label></p>';
+			if (rightPanelBattlesPossible) buf += '<p><label class="optlabel"><input type="checkbox" name="rightpanelbattles"' + (Tools.prefs('rightpanelbattles') ? ' checked' : '') + ' /> Open new battles on the right side</label></p>';
 			buf += '<p><button name="close">Close</button></p>';
 			this.$el.html(buf);
 		},
@@ -1414,17 +1379,48 @@
 		},
 		toggleIgnoreNicks: function (e) {
 			this.battle.ignoreNicks = !!e.currentTarget.checked;
-			Dex.prefs('ignorenicks', this.battle.ignoreNicks);
+			Tools.prefs('ignorenicks', this.battle.ignoreNicks);
 			this.battle.add('Nicknames ' + (this.battle.ignoreNicks ? '' : 'no longer ') + 'ignored.');
-			this.battle.resetToCurrentTurn();
+			this.toggleNicknames(this.battle.mySide);
+			this.toggleNicknames(this.battle.yourSide);
+
+			var $log = $('.battle-log .inner');
+			var $message = $('.battle .message');
+			if (this.battle.ignoreNicks) {
+				$log.addClass('hidenicks');
+				$message.addClass('hidenicks');
+			} else {
+				$log.removeClass('hidenicks');
+				$message.removeClass('hidenicks');
+			}
 		},
 		toggleIgnoreOpponent: function (e) {
 			this.battle.ignoreOpponent = !!e.currentTarget.checked;
 			this.battle.add('Opponent ' + (this.battle.ignoreOpponent ? '' : 'no longer ') + 'ignored.');
-			this.battle.resetToCurrentTurn();
+			var $log = $('.battle-log .inner');
+			var $message = $('.battle .message');
+			var $messages = $log.find('.chatmessage-' + this.battle.yourSide.id);
+			if (!$messages.length) return;
+			if (this.battle.ignoreOpponent) {
+				$messages.hide();
+				$log.addClass('hidenicks');
+				$message.addClass('hidenicks');
+			} else {
+				$messages.show();
+				$log.removeClass('hidenicks');
+				$message.removeClass('hidenicks');
+			}
+		},
+		toggleNicknames: function (side) {
+			for (var i = 0; i < side.active.length; i++) {
+				if (!side.active[i]) continue;
+				side.active[i].statbarElem.html(side.getStatbarHTML(side.active[i], true));
+				side.updateStatbar(side.active[i], true, true);
+			}
+			side.updateSidebar();
 		},
 		toggleRightPanelBattles: function (e) {
-			Dex.prefs('rightpanelbattles', !!e.currentTarget.checked);
+			Tools.prefs('rightpanelbattles', !!e.currentTarget.checked);
 		}
 	});
 
