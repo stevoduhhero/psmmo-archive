@@ -486,9 +486,9 @@ vars.key = function(key, keyup, e) {
 	var dir = keys[key] || key,
 		user = vars.players[toId(vars.username)];
 	if (!user) return;
-	if (!keys[key]) {
+	var el = $("#invisitype");
+	if (el.is(":focus") || !keys[key]) {
 		//not an arrow key
-		var el = $("#invisitype");
 		if ($(vars.focusedInput).length) el = $(vars.focusedInput);
 		if (e) el.focus();
 		if (el.attr('id') == "invisitype" && key == 13 && el.val()) {
