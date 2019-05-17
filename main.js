@@ -481,7 +481,8 @@ vars.resize = function(keyboardResize) {
 };
 vars.key = function(key, keyup, e) {
 	if (!vars.username) return;
-	var keys = {37: "left", 38: "up", 39: "right", 40: "down"};
+	var keys = {37: "left", 38: "up", 39: "right", 40: "down", //arrows
+				65: "left", 87: "up", 68: "right", 83: "down"}; //wasd
 	var dir = keys[key] || key,
 		user = vars.players[toId(vars.username)];
 	if (!user) return;
